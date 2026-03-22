@@ -20,19 +20,19 @@ const TIPUS_ULTIMS = new Set(["per-sempre", "final"]);
 const TIPUS_PRIMER = "bandera";
 
 const BLOCS_BASE = [
-  { id: 1, tipus: "bandera", nom: "bandera", imatge: banderaImg, valor: null, editable: false },
-  { id: 2, tipus: "baix", nom: "baix", imatge: baixImg, valor: 1, editable: true },
-  { id: 3, tipus: "dalt", nom: "dalt", imatge: daltImg, valor: 1, editable: true },
-  { id: 4, tipus: "esquerra", nom: "esquerra", imatge: esquerraImg, valor: 1, editable: true },
-  { id: 5, tipus: "dreta", nom: "dreta", imatge: dretaImg, valor: 1, editable: true },
+  { id: 1, tipus: "bandera", nom: "iniciar", imatge: banderaImg, valor: null, editable: false },
+  { id: 2, tipus: "baix", nom: "baixar", imatge: baixImg, valor: 1, editable: true },
+  { id: 3, tipus: "dalt", nom: "pujar", imatge: daltImg, valor: 1, editable: true },
+  { id: 4, tipus: "esquerra", nom: "retrocedir", imatge: esquerraImg, valor: 1, editable: true },
+  { id: 5, tipus: "dreta", nom: "avançar", imatge: dretaImg, valor: 1, editable: true },
   { id: 6, tipus: "inici-bucle", nom: "inici bucle", imatge: repeteixImg, valor: 4, editable: true },
   { id: 7, tipus: "fi-bucle", nom: "fi bucle", imatge: repeteixImg, valor: null, editable: false },
-  { id: 8, tipus: "espera", nom: "espera", imatge: esperaImg, valor: 10, editable: true },
-  { id: 9, tipus: "atura", nom: "atura", imatge: aturaImg, valor: null, editable: false },
-  { id: 10, tipus: "per-sempre", nom: "per sempre", imatge: perSempreImg, valor: null, editable: false },
-  { id: 11, tipus: "gira-esquerra", nom: "gira esquerra", imatge: girEsquerraImg, valor: 1, editable: true },
-  { id: 12, tipus: "gira-dreta", nom: "gira dreta", imatge: girDretaImg, valor: 1, editable: true },
-  { id: 13, tipus: "final", nom: "final", imatge: finalImg, valor: null, editable: false },
+  { id: 8, tipus: "espera", nom: "esperar", imatge: esperaImg, valor: 10, editable: true },
+  { id: 9, tipus: "atura", nom: "aturar", imatge: aturaImg, valor: null, editable: false },
+  { id: 10, tipus: "per-sempre", nom: "repetir per sempre", imatge: perSempreImg, valor: null, editable: false },
+  { id: 11, tipus: "gira-esquerra", nom: "girar esquerra", imatge: girEsquerraImg, valor: 1, editable: true },
+  { id: 12, tipus: "gira-dreta", nom: "girar dreta", imatge: girDretaImg, valor: 1, editable: true },
+  { id: 13, tipus: "final", nom: "finalitzar", imatge: finalImg, valor: null, editable: false },
 ];
 
 function crearBlocPrograma(blocBase) {
