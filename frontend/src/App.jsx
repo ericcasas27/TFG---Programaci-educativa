@@ -18,6 +18,8 @@ import finalImg from "./assets/end.png";
 
 const TIPUS_ULTIMS = new Set(["per-sempre", "final"]);
 const TIPUS_PRIMER = "bandera";
+const TIPUS_INICI_BUCLE = "inici-bucle";
+const TIPUS_FI_BUCLE = "fi-bucle";
 
 const BLOCS_BASE = [
   { id: 1, tipus: "bandera", nom: "iniciar", imatge: banderaImg, valor: null, editable: false },
@@ -70,6 +72,107 @@ function validarPrograma(programa) {
 
   return { valid: true, missatge: "" };
 }
+function analitzarBucles(programa) {
+  const pila = [];
+  const metaPerIndex = new Map();
+  let seguentId = 1;
+
+  for (let i = 0; i < programa.length; i += 1) {
+    const bloc = programa[i];
+
+    if (bloc.tipus === TIPUS_INICI_BUCLE) {
+      pila.push({ index: i });
+      continue;
+    }
+
+    if (bloc.tipus === TIPUS_FI_BUCLE) {
+      if (pila.length === 0) {
+        return {
+          valid: false,
+          missatge: "Hi ha un 'fi bucle' sense el seu 'inici bucle'.",
+          metaPerIndex,
+        };
+      }
+
+      const inici = pila.pop();
+      const idBucle = seguentId++;
+
+      metaPerIndex.set(inici.index, {
+        idBucle,
+        parellaIndex: i,
+        tipus: "inici",
+      });
+
+      metaPerIndex.set(i, {
+        idBucle,
+        parellaIndex: inici.index,
+        tipus: "fi",
+      });
+    }
+  }
+
+  if (pila.length > 0) {
+    return {
+      valid: false,
+      missatge: "Hi ha un o més 'inici bucle' sense el seu 'fi bucle'.",
+      metaPerIndex,
+    };
+  }
+
+  return {
+    valid: true,
+    missatge: "",
+    metaPerIndex,
+  };
+}
+
+function expandirPrograma(programa, metaPerIndex, inici = 0, fi = programa.length) {
+  const resultat = [];
+  let i = inici;
+
+  while (i < fi) {
+    const bloc = programa[i];
+
+    if (bloc.tipus === TIPUS_INICI_BUCLE) {
+      const meta = metaPerIndex.get(i);
+
+      if (!meta) {
+        break;
+      }
+
+      const vegades = Math.max(1, Number(bloc.valor) || 1);
+      const interior = expandirPrograma(
+        programa,
+        metaPerIndex,
+        i + 1,
+        meta.parellaIndex
+      );
+
+      for (let v = 0; v < vegades; v += 1) {
+        resultat.push(...interior.map((item) => ({ ...item })));
+      }
+
+      i = meta.parellaIndex + 1;
+      continue;
+    }
+
+    if (bloc.tipus === TIPUS_FI_BUCLE) {
+      i += 1;
+      continue;
+    }
+
+    resultat.push({
+      tipus: bloc.tipus,
+      nom: bloc.nom,
+      valor: bloc.valor,
+    });
+
+    i += 1;
+  }
+
+  return resultat;
+}
+
 
 export default function App() {
   const [missatge, setMissatge] = useState("Carregant...");
@@ -87,6 +190,25 @@ export default function App() {
       .then((data) => setMissatge(data.message))
       .catch(() => setMissatge("Error cridant al backend"));
   }, []);
+
+  const analisiBucles = useMemo(() => {
+    return analitzarBucles(programa);
+  }, [programa]);
+
+  const sequenciaCompilada = useMemo(() => {
+    if (!analisiBucles.valid) {
+      return [];
+    }
+
+    return expandirPrograma(programa, analisiBucles.metaPerIndex).map(
+      (bloc, index) => ({
+        ordre: index + 1,
+        tipus: bloc.tipus,
+        nom: bloc.nom,
+        valor: bloc.valor,
+      })
+    );
+  }, [programa, analisiBucles]);
 
   const aplicarCanviPrograma = (nouPrograma) => {
     const validacio = validarPrograma(nouPrograma);
@@ -130,7 +252,7 @@ export default function App() {
   };
 
   const iniciarPrograma = () => {
-    alert("Botó d'inici preparat. La lògica d'execució la connectarem més endavant.");
+    alert("Aquest botó encara no fa res :)");
   };
 
   const iniciarArrossegamentBase = (event, blocBase) => {
@@ -271,6 +393,9 @@ export default function App() {
           </div>
 
           {avisPrograma && <p className="avisPrograma">{avisPrograma}</p>}
+          {analisiBucles.missatge && (
+            <p className="avisPrograma">{analisiBucles.missatge}</p>
+          )}
 
           <div className="zonaProgramacio">
             {programa.length === 0 ? (
@@ -335,8 +460,8 @@ export default function App() {
           </div>
 
           <div className="resumPrograma">
-            <h3>Seqüència guardada</h3>
-            <pre>{JSON.stringify(sequenciaGuardada, null, 2)}</pre>
+            <h3>Seqüència compilada</h3>
+            <pre>{JSON.stringify(sequenciaCompilada, null, 2)}</pre>
           </div>
         </section>
       </main>
