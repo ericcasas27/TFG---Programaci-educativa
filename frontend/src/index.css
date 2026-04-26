@@ -457,3 +457,20 @@ input {
 .blocPrograma:active {
   cursor: grabbing;
 }
+
+.columnesResum {
+  display: flex;
+  gap: 20px;
+}
+
+.columna {
+  flex: 1;
+  background: #111;
+  padding: 10px;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.columna pre {
+  font-size: 12px;
+}
