@@ -23,10 +23,10 @@ const TIPUS_FI_BUCLE = "fi-bucle";
 
 const BLOCS_BASE = [
   { id: 1, tipus: "bandera", nom: "iniciar", imatge: banderaImg, valor: null, editable: false },
-  { id: 2, tipus: "baix", nom: "baixar", imatge: baixImg, valor: 1, editable: true },
-  { id: 3, tipus: "dalt", nom: "pujar", imatge: daltImg, valor: 1, editable: true },
-  { id: 4, tipus: "esquerra", nom: "retrocedir", imatge: esquerraImg, valor: 1, editable: true },
-  { id: 5, tipus: "dreta", nom: "avançar", imatge: dretaImg, valor: 1, editable: true },
+  { id: 2, tipus: "baixar", nom: "baixar", imatge: baixImg, valor: 1, editable: true },
+  { id: 3, tipus: "pujar", nom: "pujar", imatge: daltImg, valor: 1, editable: true },
+  { id: 4, tipus: "retrocedir", nom: "retrocedir", imatge: esquerraImg, valor: 1, editable: true },
+  { id: 5, tipus: "avançar", nom: "avançar", imatge: dretaImg, valor: 1, editable: true },
   { id: 6, tipus: "inici-bucle", nom: "inici bucle", imatge: repeteixImg, valor: 4, editable: true },
   { id: 7, tipus: "fi-bucle", nom: "fi bucle", imatge: repeteixImg, valor: null, editable: false },
   { id: 8, tipus: "espera", nom: "esperar", imatge: esperaImg, valor: 10, editable: true },
@@ -173,6 +173,31 @@ function expandirPrograma(programa, metaPerIndex, inici = 0, fi = programa.lengt
   return resultat;
 }
 
+function traduirASecuenciaRobot(sequencia) {
+  const mapa = {
+    "pujar": "UP",
+    "baixar": "DOWN",
+    "avançar": "FORWARD",
+    "retrocedir": "BACK",
+    "gira-dreta": "RIGHT",
+    "gira-esquerra": "LEFT",
+    "espera": "QUIET",
+    "atura": "QUIET",
+  };
+
+  return sequencia
+    .map((bloc) => {
+      const ordre = mapa[bloc.tipus];
+
+      if (!ordre) return null;
+
+      const valor = bloc.valor ? bloc.valor * 1000 : 0;
+
+      return `{${ordre},${valor}}`;
+    })
+    .filter(Boolean); 
+}
+
 
 export default function App() {
   const [missatge, setMissatge] = useState("Carregant...");
@@ -183,6 +208,7 @@ export default function App() {
   const [dragInfo, setDragInfo] = useState(null);
   const [slotActiu, setSlotActiu] = useState(null);
   const [avisPrograma, setAvisPrograma] = useState("");
+  const [sequenciaRobot, setSequenciaRobot] = useState([]);
 
   useEffect(() => {
     fetch("/.netlify/functions/hello")
@@ -249,10 +275,17 @@ export default function App() {
   const esborrarPrograma = () => {
     setPrograma([]);
     setAvisPrograma("");
+    setSequenciaRobot([]);
   };
 
   const iniciarPrograma = () => {
-    alert("Aquest botó encara no fa res :)");
+    if (!analisiBucles.valid) {
+      alert("El programa té errors");
+      return;
+    }
+
+    const traduccio = traduirASecuenciaRobot(sequenciaCompilada);
+    setSequenciaRobot(traduccio);
   };
 
   const iniciarArrossegamentBase = (event, blocBase) => {
@@ -460,8 +493,19 @@ export default function App() {
           </div>
 
           <div className="resumPrograma">
-            <h3>Seqüència compilada</h3>
-            <pre>{JSON.stringify(sequenciaCompilada, null, 2)}</pre>
+            <div className="columnesResum">
+              
+              <div className="columna">
+                <h3>Seqüència compilada</h3>
+                <pre>{JSON.stringify(sequenciaCompilada, null, 2)}</pre>
+              </div>
+
+              <div className="columna">
+                <h3>Seqüència robot</h3>
+                <pre>{sequenciaRobot.join("\n")}</pre>
+              </div>
+
+            </div>
           </div>
         </section>
       </main>
