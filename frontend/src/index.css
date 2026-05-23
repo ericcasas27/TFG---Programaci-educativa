@@ -484,6 +484,16 @@ button, input { font: inherit; }
   transform: translateX(-50%) translateY(0);
 }
 
+.blocPrograma--actiu .fitxaNumero {
+  background: #1db954;
+  border-color: #1db954;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(29, 185, 84, 0.6);
+}
+.panellBlocs .fitxaNumero {
+  bottom: 21px;
+}
+
 @media (max-width: 860px) {
   .aplicacio { height: auto; }
 
