@@ -65,7 +65,7 @@ button, input { font: inherit; }
 
 .barraSuperior__titol { font-weight: 800; font-size: 20px; }
 
-.barraSuperior__nav { display: flex; gap: 8px; }
+.barraSuperior__nav { display: flex; gap: 8px; align-items: center; }
 
 .barraSuperior__boto {
   background: rgba(255, 255, 255, 0.1);
@@ -79,12 +79,29 @@ button, input { font: inherit; }
 
 .barraSuperior__boto:hover { background: rgba(255, 255, 255, 0.18); }
 
+.barraSuperior__boto--bt-off {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.barraSuperior__boto--bt-on {
+  background: rgba(29, 185, 84, 0.2);
+  border-color: #1db954;
+  color: #1db954;
+  font-weight: 600;
+}
+
+.barraSuperior__boto--bt-on:hover {
+  background: rgba(29, 185, 84, 0.3);
+}
+
 .pagina {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 55fr 45fr;
+  grid-template-rows: 44fr 56fr;
   grid-template-areas:
     "blocs    simulador"
     "prog     prog";
@@ -225,65 +242,85 @@ button, input { font: inherit; }
 
 .zonaBuidaDrop {
   width: 100%;
-  min-height: 60px;
+  min-height: 160px;
   display: flex;
-  align-items: flex-start;
-  padding: 4px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border-radius: 12px;
 }
 
 .zonaProgramacioBuit {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 16px;
   line-height: 1.6;
+  text-align: center;
 }
 
 .llistaPrograma {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
+  padding: 8px 12px 8px 28px;
+  overflow: visible;
+  gap: 0;
 }
 
 .slotInsercio {
-  width: 12px;
-  min-width: 12px;
-  height: 110px;
+  width: 8px;
+  min-width: 8px;
+  height: 130px;
   border-radius: 6px;
-  transition: background 0.15s, outline 0.15s;
+  background: transparent;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+  transition: width 0.15s ease, background 0.15s ease;
 }
 
 .slotInsercio--actiu {
-  background: rgba(82, 171, 255, 0.18);
-  outline: 2px solid rgba(82, 171, 255, 0.75);
+  width: 90px;
+  background: rgba(82, 171, 255, 0.22);
+  outline: 3px dashed rgba(82, 171, 255, 0.85);
+  border-radius: 12px;
 }
 
 .blocPrograma {
   position: relative;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 8px 8px 2px;
+  background: transparent;
+  border: none;
+  padding: 0;
   cursor: grab;
+  margin-left: -22px;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
-.blocPrograma:active { cursor: grabbing; }
+.blocPrograma:hover {
+  z-index: 10;
+}
+
+.blocPrograma:active { cursor: grabbing; z-index: 10; }
 
 .botoEliminarBloc {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 2px;
+  right: 2px;
   width: 22px;
   height: 22px;
   border-radius: 999px;
   border: 0;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.55);
   color: white;
   font-size: 15px;
   cursor: pointer;
   display: grid;
   place-items: center;
+  z-index: 20;
 }
 
-.botoEliminarBloc:hover { background: rgba(255, 255, 255, 0.28); }
+.botoEliminarBloc:hover { background: rgba(200, 50, 50, 0.85); }
 
 .modalSeq {
   display: flex;
@@ -348,29 +385,29 @@ button, input { font: inherit; }
 .fitxa--arrossegable { cursor: grab; }
 .fitxa--arrossegable:active { cursor: grabbing; }
 
-.fitxaImatge { width: 76px; height: auto; display: block; }
+.fitxaImatge { width: 82px; height: auto; display: block; }
 
 .fitxaNumero {
   position: absolute;
-  bottom: 22px;
-  left: 50%;
+  bottom: 16px;
+  left: 44%;
   transform: translateX(-50%);
-  width: 34px;
+  width: 46px;
   text-align: center;
   border: 1px solid #999;
   border-radius: 12px;
   background: white;
   color: #111;
   font-weight: 700;
-  font-size: 12px;
-  padding: 2px 4px;
+  font-size: 14px;
+  padding: 3px 4px;
 }
 
 .fitxaNumero--fix {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 22px;
+  height: 24px;
 }
 
 .fitxaNom {
@@ -419,6 +456,32 @@ button, input { font: inherit; }
   cursor: pointer;
   padding: 6px 10px;
   border-radius: 10px;
+}
+
+.toastBt {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: rgba(15, 15, 25, 0.96);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 99999;
+}
+
+.toastBt--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 @media (max-width: 860px) {
