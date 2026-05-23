@@ -8,7 +8,8 @@ import baixImg from "./assets/down.png";
 import daltImg from "./assets/up.png";
 import esquerraImg from "./assets/left.png";
 import dretaImg from "./assets/right.png";
-import repeteixImg from "./assets/repeat.png";
+import repeteixImgIni from "./assets/inici_bucle.png";
+import repeteixImgFi from "./assets/final_bucle.png";
 import esperaImg from "./assets/wait.png";
 import girEsquerraImg from "./assets/turnleft.png";
 import girDretaImg from "./assets/turnright.png";
@@ -28,12 +29,11 @@ const BLOCS_BASE = [
   { id: 5,  tipus: "avançar",       nom: "avançar",        imatge: dretaImg,      valor: 1,    editable: true  },
   { id: 6,  tipus: "gira-esquerra", nom: "girar esquerra", imatge: girEsquerraImg,valor: 1,    editable: true  },
   { id: 7,  tipus: "gira-dreta",    nom: "girar dreta",    imatge: girDretaImg,   valor: 1,    editable: true  },
-  { id: 8,  tipus: "inici-bucle",   nom: "inici bucle",    imatge: repeteixImg,   valor: 3,    editable: true  },
-  { id: 9,  tipus: "fi-bucle",      nom: "fi bucle",       imatge: repeteixImg,   valor: null, editable: false },
+  { id: 8,  tipus: "inici-bucle",   nom: "inici bucle",    imatge: repeteixImgIni,   valor: 3,    editable: true  },
+  { id: 9,  tipus: "fi-bucle",      nom: "fi bucle",       imatge: repeteixImgFi,   valor: null, editable: false },
   { id: 10, tipus: "espera",        nom: "esperar",        imatge: esperaImg,     valor: 3,    editable: true  },
   { id: 11, tipus: "final",         nom: "finalitzar",     imatge: finalImg,      valor: null, editable: false },
 ];
-
 
 function crearBlocPrograma(blocBase) {
   return {
@@ -100,7 +100,9 @@ function traduirASecuenciaRobot(sequencia) {
   }).filter(Boolean);
 }
 
-// Component principal
+const BT_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0";
+const BT_CHAR_UUID    = "12345678-1234-5678-1234-56789abcdef1";
+const BT_MTU          = 180;
 
 export default function App() {
   const [ajudaOberta,    setAjudaOberta   ] = useState(false);
@@ -113,10 +115,60 @@ export default function App() {
   const [sequenciaRobot, setSequenciaRobot] = useState([]);
   const [resetSignal,    setResetSignal   ] = useState(0);
   const [estatSimulador, setEstatSimulador] = useState("idle");
+  const [btConnectat,    setBtConnectat   ] = useState(false);
+  const [toastBt,        setToastBt       ] = useState(false);
+  const [toastBtText,    setToastBtText   ] = useState("");
 
-  const refSimulador = useRef(null);
+  const refSimulador        = useRef(null);
+  const refBtCaracteristica = useRef(null);
+  const refTimerToastBt     = useRef(null);
+
+  const mostrarToastBt = (text) => {
+    setToastBtText(text);
+    setToastBt(true);
+    clearTimeout(refTimerToastBt.current);
+    refTimerToastBt.current = setTimeout(() => setToastBt(false), 3000);
+  };
+
+  const connectarBluetooth = async () => {
+    if (!navigator.bluetooth) {
+      mostrarToastBt("⚠️ Aquest navegador no suporta Bluetooth");
+      return;
+    }
+    try {
+      const dispositiu = await navigator.bluetooth.requestDevice({
+        filters: [{ name: "TeleROV" }],
+        optionalServices: [BT_SERVICE_UUID],
+      });
+      dispositiu.addEventListener("gattserverdisconnected", () => {
+        setBtConnectat(false);
+        refBtCaracteristica.current = null;
+        mostrarToastBt("🔌 Robot desconnectat");
+      });
+      const servidor       = await dispositiu.gatt.connect();
+      const servei         = await servidor.getPrimaryService(BT_SERVICE_UUID);
+      const caracteristica = await servei.getCharacteristic(BT_CHAR_UUID);
+      refBtCaracteristica.current = caracteristica;
+      setBtConnectat(true);
+      mostrarToastBt("✅ Robot connectat!");
+    } catch (err) {
+      if (err.name !== "NotFoundError") {
+        mostrarToastBt("❌ Error de connexió Bluetooth");
+      }
+    }
+  };
+
+  const enviarSequencia = async (sequencia) => {
+    const car = refBtCaracteristica.current;
+    if (!car) return;
+    const bytes = new TextEncoder().encode(sequencia.join(""));
+    for (let i = 0; i < bytes.length; i += BT_MTU) {
+      await car.writeValueWithoutResponse(bytes.slice(i, i + BT_MTU));
+    }
+  };
 
   const analisiBucles = useMemo(() => analitzarBucles(programa), [programa]);
+
   const sequenciaCompilada = useMemo(() => {
     if (!analisiBucles.valid) return [];
     return expandirPrograma(programa, analisiBucles.metaPerIndex).map((bloc, index) => ({
@@ -124,24 +176,26 @@ export default function App() {
     }));
   }, [programa, analisiBucles]);
 
-  // Gestió del programa
   const aplicarCanviPrograma = (nouPrograma) => {
     const v = validarPrograma(nouPrograma);
     if (!v.valid) { setAvisPrograma(v.missatge); return false; }
     setPrograma(nouPrograma); setAvisPrograma(""); return true;
   };
+
   const inserirBlocEnPosicio = (blocBase, index) => {
     const p = [...programa]; p.splice(index, 0, crearBlocPrograma(blocBase)); aplicarCanviPrograma(p);
   };
+
   const canviarValorBlocPrograma = (instanciaId, nouValor) => {
     const val = Number.isNaN(nouValor) ? 1 : Math.max(1, nouValor);
     setPrograma((prev) => prev.map((b) => b.instanciaId === instanciaId ? { ...b, valor: val } : b));
   };
+
   const eliminarBlocPrograma = (instanciaId) =>
     aplicarCanviPrograma(programa.filter((b) => b.instanciaId !== instanciaId));
+
   const esborrarPrograma = () => { setPrograma([]); setAvisPrograma(""); setSequenciaRobot([]); };
 
-  // Actualitza la seqüència robot automàticament quan canvia el programa
   useEffect(() => {
     if (analisiBucles.valid) {
       setSequenciaRobot(traduirASecuenciaRobot(sequenciaCompilada));
@@ -150,9 +204,22 @@ export default function App() {
     }
   }, [sequenciaCompilada, analisiBucles.valid]);
 
-  const iniciarPrograma = () => {};
+  const iniciarPrograma = async () => {
+    if (programa.length === 0) return;
+    if (!btConnectat) {
+      mostrarToastBt("📡 Connecta el robot per Bluetooth primer");
+      return;
+    }
+    const seq = traduirASecuenciaRobot(sequenciaCompilada);
+    if (seq.length === 0) return;
+    try {
+      await enviarSequencia(seq);
+      mostrarToastBt("📤 Seqüència enviada al robot!");
+    } catch {
+      mostrarToastBt("❌ Error enviant la seqüència");
+    }
+  };
 
-  // Botons simulador 
   const executant = estatSimulador === "executant";
   const pausat    = estatSimulador === "pausat";
   const fet       = estatSimulador === "fet";
@@ -161,7 +228,6 @@ export default function App() {
   const gestionarAtura   = () => refSimulador.current?.aturar();
   const gestionarReset   = () => { refSimulador.current?.reset(); setSequenciaRobot([]); };
 
-  // Drag & drop
   const iniciarArrossegamentBase = (e, blocBase) => {
     setDragInfo({ origen: "paleta", blocId: blocBase.id });
     e.dataTransfer.effectAllowed = "copy";
@@ -195,14 +261,16 @@ export default function App() {
     setDragInfo(null); setSlotActiu(null);
   };
 
-
-  // Render
   return (
     <div className="aplicacio">
       <BarraSuperior
         enObrirAjuda={() => setAjudaOberta(true)}
         enObrirSobre={() => setSobreObert(true)}
+        enConnectarBluetooth={connectarBluetooth}
+        btConnectat={btConnectat}
       />
+
+      <div className={`toastBt${toastBt ? " toastBt--visible" : ""}`}>{toastBtText}</div>
 
       <main className="pagina">
 
@@ -274,7 +342,7 @@ export default function App() {
               <button
                 className="botoAccio botoAccio--iniciar"
                 onClick={iniciarPrograma}
-                title="Enviar al simulador"
+                title="Enviar al robot"
                 type="button"
               >
                 <span className="iconaBoto">▶</span>
@@ -300,7 +368,9 @@ export default function App() {
                 onDragOver={(e) => permetreDeixar(e, 0)}
                 onDrop={(e) => deixarEnPosicio(e, 0)}
               >
-                <p className="zonaProgramacioBuit">Arrossega aquí els blocs o clica'ls.</p>
+                <p className="zonaProgramacioBuit">
+                  🧩 Clica les peces o arrossega-les aquí per crear el programa
+                </p>
               </div>
             ) : (
               <div className="llistaPrograma">
@@ -357,7 +427,7 @@ export default function App() {
           )}
           {sequenciaRobot.length === 0 && (
             <div className="modalSeq__columna modalSeq__columna--buit">
-              <p>Envia el programa al simulador (▶) per veure la seqüència robot.</p>
+              <p>Envia el programa al robot (▶) per veure la seqüència robot.</p>
             </div>
           )}
         </div>
