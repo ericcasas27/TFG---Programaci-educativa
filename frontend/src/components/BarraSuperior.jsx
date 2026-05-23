@@ -1,26 +1,6 @@
 import logo from "../assets/telerovnfons.png";
 
-export default function BarraSuperior({ enObrirAjuda, enObrirSobre }) {
-
-  const connectBluetooth = async () => {
-    try {
-      if (!navigator.bluetooth) {
-        alert("Aquest navegador no suporta Web Bluetooth.");
-        return;
-      }
-
-      const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true
-      });
-
-      alert(
-        `Dispositiu seleccionat:\n${device.name || "Sense nom"}\nID: ${device.id}`
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Error connectant per Bluetooth: " + err.message);
-    }
-  };
+export default function BarraSuperior({ enObrirAjuda, enObrirSobre, enConnectarBluetooth, btConnectat }) {
 
   return (
     <header className="barraSuperior">
@@ -32,8 +12,11 @@ export default function BarraSuperior({ enObrirAjuda, enObrirSobre }) {
       </div>
 
       <nav className="barraSuperior__nav">
-        <button className="barraSuperior__boto" onClick={connectBluetooth}>
-          Connectar robot (Bluetooth)
+        <button
+          className={`barraSuperior__boto ${btConnectat ? "barraSuperior__boto--bt-on" : "barraSuperior__boto--bt-off"}`}
+          onClick={enConnectarBluetooth}
+        >
+          {btConnectat ? "✅ Robot connectat" : "🔵 Connectar robot"}
         </button>
 
         <button className="barraSuperior__boto" onClick={enObrirAjuda}>
