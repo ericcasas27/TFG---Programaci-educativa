@@ -155,7 +155,7 @@ export default function App() {
       const caracteristica = await servei.getCharacteristic(BT_CHAR_UUID);
       refBtCaracteristica.current = caracteristica;
       setBtConnectat(true);
-      mostrarToastBt("✅ Robot connectat!");
+      mostrarToastBt("Robot connectat!");
     } catch (err) {
       if (err.name !== "NotFoundError") {
         mostrarToastBt("❌ Error de connexió Bluetooth");
@@ -181,7 +181,7 @@ export default function App() {
       const executarSeguent = () => {
         if (i >= passos.length) {
           setInstanciaActiva(null);
-          mostrarToastBt("✅ Seqüència completada!");
+          mostrarToastBt("Seqüència completada!");
           return;
         }
         const pas = passos[i];

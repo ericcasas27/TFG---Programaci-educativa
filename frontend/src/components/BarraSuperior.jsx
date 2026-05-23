@@ -15,14 +15,14 @@ export default function BarraSuperior({ enObrirAjuda, enObrirSobre, enConnectarB
             className="barraSuperior__boto barraSuperior__boto--bt-off"
             onClick={enConnectarBluetooth}
           >
-            🔵 Connectar robot
+            🤖 Connectar robot
           </button>
         ) : (
           <button
             className="barraSuperior__boto barraSuperior__boto--bt-on"
             onClick={enDesconnectarBluetooth}
           >
-            ✅ Robot connectat · Desconnectar
+            Robot connectat · Desconnectar
           </button>
         )}
         <button className="barraSuperior__boto" onClick={enObrirAjuda}>
