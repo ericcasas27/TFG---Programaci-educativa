@@ -86,7 +86,7 @@ function expandirPrograma(programa, metaPerIndex, inici = 0, fi = programa.lengt
       i = meta.parellaIndex + 1; continue;
     }
     if (bloc.tipus === TIPUS_FI_BUCLE) { i++; continue; }
-    resultat.push({ tipus: bloc.tipus, nom: bloc.nom, valor: bloc.valor });
+    resultat.push({ tipus: bloc.tipus, nom: bloc.nom, valor: bloc.valor, programaIndex: i });
     i++;
   }
   return resultat;
@@ -118,7 +118,10 @@ export default function App() {
   const [btConnectat,    setBtConnectat   ] = useState(false);
   const [toastBt,        setToastBt       ] = useState(false);
   const [toastBtText,    setToastBtText   ] = useState("");
-
+  const [instanciaActiva, setInstanciaActiva] = useState(null);
+ 
+  const refBtDispositiu    = useRef(null);
+  const refTimerSeguiment  = useRef(null);
   const refSimulador        = useRef(null);
   const refBtCaracteristica = useRef(null);
   const refTimerToastBt     = useRef(null);
@@ -130,7 +133,7 @@ export default function App() {
     refTimerToastBt.current = setTimeout(() => setToastBt(false), 3000);
   };
 
-  const connectarBluetooth = async () => {
+ const connectarBluetooth = async () => {
     if (!navigator.bluetooth) {
       mostrarToastBt("⚠️ Aquest navegador no suporta Bluetooth");
       return;
@@ -140,9 +143,11 @@ export default function App() {
         filters: [{ name: "TeleROV" }],
         optionalServices: [BT_SERVICE_UUID],
       });
+      refBtDispositiu.current = dispositiu;
       dispositiu.addEventListener("gattserverdisconnected", () => {
         setBtConnectat(false);
         refBtCaracteristica.current = null;
+        refBtDispositiu.current = null;
         mostrarToastBt("🔌 Robot desconnectat");
       });
       const servidor       = await dispositiu.gatt.connect();
@@ -157,6 +162,37 @@ export default function App() {
       }
     }
   };
+
+  const desconnectarBluetooth = () => {
+      if (refBtDispositiu.current?.gatt?.connected) {
+        refBtDispositiu.current.gatt.disconnect();
+      }
+      setBtConnectat(false);
+      refBtCaracteristica.current = null;
+      refBtDispositiu.current = null;
+      mostrarToastBt("🔌 Robot desconnectat");
+    };
+
+    const iniciarSeguimentExecucio = (sequencia) => {
+      clearTimeout(refTimerSeguiment.current);
+      const mapa = new Set(["pujar","baixar","avançar","retrocedir","gira-dreta","gira-esquerra","espera"]);
+      const passos = sequencia.filter(p => mapa.has(p.tipus)); // ← filtra bandera/final
+      let i = 0;
+      const executarSeguent = () => {
+        if (i >= passos.length) {
+          setInstanciaActiva(null);
+          mostrarToastBt("✅ Seqüència completada!");
+          return;
+        }
+        const pas = passos[i];
+        const instanciaId = programa[pas.programaIndex]?.instanciaId ?? null;
+        setInstanciaActiva(instanciaId);
+        mostrarToastBt(`▶ ${pas.nom}${pas.valor ? ` · ${pas.valor}s` : ""}`);
+        refTimerSeguiment.current = setTimeout(() => { i++; executarSeguent(); }, (pas.valor || 1) * 1000);
+      };
+      executarSeguent();
+    };
+
 
   const enviarSequencia = async (sequencia) => {
     const car = refBtCaracteristica.current;
@@ -173,6 +209,7 @@ export default function App() {
     if (!analisiBucles.valid) return [];
     return expandirPrograma(programa, analisiBucles.metaPerIndex).map((bloc, index) => ({
       ordre: index + 1, tipus: bloc.tipus, nom: bloc.nom, valor: bloc.valor,
+      programaIndex: bloc.programaIndex,
     }));
   }, [programa, analisiBucles]);
 
@@ -214,7 +251,8 @@ export default function App() {
     if (seq.length === 0) return;
     try {
       await enviarSequencia(seq);
-      mostrarToastBt("📤 Seqüència enviada al robot!");
+      refSimulador.current?.simular();
+      iniciarSeguimentExecucio(sequenciaCompilada);
     } catch {
       mostrarToastBt("❌ Error enviant la seqüència");
     }
@@ -267,6 +305,7 @@ export default function App() {
         enObrirAjuda={() => setAjudaOberta(true)}
         enObrirSobre={() => setSobreObert(true)}
         enConnectarBluetooth={connectarBluetooth}
+        enDesconnectarBluetooth={desconnectarBluetooth}
         btConnectat={btConnectat}
       />
 
@@ -382,7 +421,7 @@ export default function App() {
                 {programa.flatMap((bloc, index) => [
                   <div
                     key={bloc.instanciaId}
-                    className="blocPrograma"
+                    className={`blocPrograma${instanciaActiva === bloc.instanciaId ? " blocPrograma--actiu" : ""}`}
                     draggable
                     onDragStart={(e) => iniciarArrossegamentPrograma(e, bloc.instanciaId)}
                     onDragEnd={finalitzarArrossegament}
