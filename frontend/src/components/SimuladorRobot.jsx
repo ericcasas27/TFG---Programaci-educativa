@@ -386,7 +386,7 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
       x: 0, y: 0, z: 0,
       angleH:  0,    // yaw al voltant de Y (0 = cara a la càmera = +Z)
       VELOCITAT:   85,   // unitats/s avançar/retrocedir
-      GIRO:        1.5,  // rad/s girar
+      GIRO:        0.785*2,  // rad/s girar
       VELOCITAT_V: 65,   // unitats/s pujar/baixar
       cua: [], comandaActual: null, tempsComandat: 0,
       executant: false, acabat: false,
