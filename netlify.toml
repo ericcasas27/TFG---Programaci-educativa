@@ -5,3 +5,8 @@
 
 [functions]
   directory = "../netlify/functions"
+
+# Instal·la les dependències de les funcions (bcryptjs, jsonwebtoken, mongoose)
+# a partir del seu propi package.json. Sense això, Netlify no les instal·la.
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
