@@ -1,2 +1,8 @@
 # Local Netlify folder
 .netlify
+
+# Dependències (mai al repo)
+node_modules/
+
+# Variables d'entorn (secrets)
+.env
