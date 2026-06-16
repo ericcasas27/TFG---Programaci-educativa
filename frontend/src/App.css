@@ -42,13 +42,13 @@ button, input { font: inherit; }
   z-index: 50;
 }
 
-.barraSuperior__esquerra {
+.barraSuperior_esquerra {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.barraSuperior__logo {
+.barraSuperior_logo {
   width: 52px;
   height: 52px;
   border-radius: 12px;
@@ -56,18 +56,18 @@ button, input { font: inherit; }
   overflow: hidden;
 }
 
-.barraSuperior__logoImg {
+.barraSuperior_logoImg {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
 }
 
-.barraSuperior__titol { font-weight: 800; font-size: 20px; }
+.barraSuperior_titol { font-weight: 800; font-size: 20px; }
 
-.barraSuperior__nav { display: flex; gap: 8px; align-items: center; }
+.barraSuperior_nav { display: flex; gap: 8px; align-items: center; }
 
-.barraSuperior__boto {
+.barraSuperior_boto {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -77,22 +77,22 @@ button, input { font: inherit; }
   font-size: 13px;
 }
 
-.barraSuperior__boto:hover { background: rgba(255, 255, 255, 0.18); }
+.barraSuperior_boto:hover { background: rgba(255, 255, 255, 0.18); }
 
-.barraSuperior__boto--bt-off {
+.barraSuperior_boto-bt-off {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.7);
 }
 
-.barraSuperior__boto--bt-on {
+.barraSuperior_boto-bt-on {
   background: rgba(29, 185, 84, 0.2);
   border-color: #1db954;
   color: #1db954;
   font-weight: 600;
 }
 
-.barraSuperior__boto--bt-on:hover {
+.barraSuperior_boto-bt-on:hover {
   background: rgba(29, 185, 84, 0.3);
 }
 
@@ -146,7 +146,7 @@ button, input { font: inherit; }
   border-radius: 10px;
 }
 
-.simuladorCanvasWrap > .simulador-contenidor--modal {
+.simuladorCanvasWrap > .simulador-contenidor-modal {
   position: fixed !important;
   inset: 28px !important;
   width: auto !important;
@@ -208,14 +208,14 @@ button, input { font: inherit; }
 
 .iconaBoto { font-size: 20px; line-height: 1; }
 
-.botoAccio--visualitzar { background: #1565c0; }
-.botoAccio--visualitzar:hover:not(:disabled) { background: #1976d2; }
+.botoAccio-visualitzar { background: #1565c0; }
+.botoAccio-visualitzar:hover:not(:disabled) { background: #1976d2; }
 
-.botoAccio--iniciar { background: #1f9d46; }
-.botoAccio--iniciar:hover { background: #28b352; }
+.botoAccio-iniciar { background: #1f9d46; }
+.botoAccio-iniciar:hover { background: #28b352; }
 
-.botoAccio--esborrar { background: #c93434; }
-.botoAccio--esborrar:hover { background: #dd4343; }
+.botoAccio-esborrar { background: #c93434; }
+.botoAccio-esborrar:hover { background: #dd4343; }
 
 .avisPrograma {
   margin: 0 0 10px;
@@ -226,6 +226,12 @@ button, input { font: inherit; }
   color: #ffd7d7;
   font-size: 14px;
   flex-shrink: 0;
+}
+
+.avisPrograma-avis {
+  background: rgba(201, 130, 30, 0.18);
+  border-color: rgba(201, 130, 30, 0.5);
+  color: #ffe0b2;
 }
 
 .zonaProgramacio {
@@ -279,7 +285,7 @@ button, input { font: inherit; }
   transition: width 0.15s ease, background 0.15s ease;
 }
 
-.slotInsercio--actiu {
+.slotInsercio-actiu {
   width: 90px;
   background: rgba(82, 171, 255, 0.22);
   outline: 3px dashed rgba(82, 171, 255, 0.85);
@@ -295,6 +301,7 @@ button, input { font: inherit; }
   margin-left: -22px;
   z-index: 1;
   flex-shrink: 0;
+  touch-action: none;
 }
 
 .blocPrograma:hover {
@@ -302,6 +309,9 @@ button, input { font: inherit; }
 }
 
 .blocPrograma:active { cursor: grabbing; z-index: 10; }
+
+.blocPrograma-bandera { cursor: pointer; }
+.blocPrograma-bandera:hover .fitxa { filter: brightness(1.15); }
 
 .botoEliminarBloc {
   position: absolute;
@@ -328,14 +338,14 @@ button, input { font: inherit; }
   height: 100%;
 }
 
-.modalSeq__columna {
+.modalSeq_columna {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.modalSeq__columna--buit {
+.modalSeq_columna-buit {
   justify-content: center;
   align-items: center;
   color: rgba(255, 255, 255, 0.45);
@@ -346,7 +356,7 @@ button, input { font: inherit; }
   padding: 20px;
 }
 
-.modalSeq__titol {
+.modalSeq_titol {
   margin: 0 0 4px;
   font-size: 13px;
   font-weight: 600;
@@ -355,7 +365,7 @@ button, input { font: inherit; }
   letter-spacing: 0.05em;
 }
 
-.modalSeq__pre {
+.modalSeq_pre {
   flex: 1;
   margin: 0;
   padding: 12px;
@@ -382,8 +392,8 @@ button, input { font: inherit; }
   user-select: none;
 }
 
-.fitxa--arrossegable { cursor: grab; }
-.fitxa--arrossegable:active { cursor: grabbing; }
+.fitxa-arrossegable { cursor: grab; touch-action: none; }
+.fitxa-arrossegable:active { cursor: grabbing; }
 
 .fitxaImatge { width: 82px; height: auto; display: block; }
 
@@ -403,7 +413,7 @@ button, input { font: inherit; }
   padding: 3px 4px;
 }
 
-.fitxaNumero--fix {
+.fitxaNumero-fix {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -479,12 +489,12 @@ button, input { font: inherit; }
   z-index: 99999;
 }
 
-.toastBt--visible {
+.toastBt-visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
 
-.blocPrograma--actiu .fitxaNumero {
+.blocPrograma-actiu .fitxaNumero {
   background: #1db954;
   border-color: #1db954;
   color: #fff;
@@ -525,3 +535,747 @@ button, input { font: inherit; }
     flex-direction: column;
   }
 }
+
+/* Modal Auth / Guardar / Programes
+   Segueix el mateix estil que App.css: fons #1f1f1f, panells #262626,
+   bordes rgba(255,255,255,0.1), border-radius 16px, font system-ui */
+
+.modalAuth_fons {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalAuth_caixa {
+  background: #0f0f0f;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 24px 20px 20px;
+  width: min(380px, 92vw);
+  position: relative;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.modalAuth_caixa-ampla {
+  width: min(480px, 92vw);
+}
+
+.modalAuth_tancar {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  color: #fff;
+  border: 0;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  line-height: 1;
+}
+.modalAuth_tancar:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Tabs login / registre */
+.modalAuth_tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.modalAuth_tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 10px 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.modalAuth_tab-actiu {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+.modalAuth_tab:hover:not(.modalAuth_tab-actiu) {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Títol (modal guardar / programes) */
+.modalAuth_titol {
+  margin: 0 0 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  padding-right: 32px;
+}
+
+/* Form body */
+.modalAuth_cos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalAuth_label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 8px;
+}
+
+.modalAuth_input {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.modalAuth_input:focus {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.modalAuth_error {
+  color: #ffd7d7;
+  font-size: 13px;
+  background: rgba(201, 52, 52, 0.18);
+  border: 1px solid rgba(201, 52, 52, 0.5);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-top: 4px;
+}
+
+.modalAuth_info {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 14px;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.modalAuth_boto {
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.modalAuth_boto:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+}
+.modalAuth_boto:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modalAuth_boto-perill {
+  background: rgba(201, 52, 52, 0.22);
+  border-color: rgba(201, 52, 52, 0.6);
+  color: #ffd7d7;
+}
+.modalAuth_boto-perill:hover:not(:disabled) {
+  background: rgba(201, 52, 52, 0.38);
+}
+
+.modalGuardar_avis {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+  margin: 4px 0 8px;
+}
+
+/* Llista de programes guardats */
+.programesLlista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+/* Grup de programes d'una mateixa partida completada */
+.completioGrup { margin-top: 12px; }
+.completioGrup_titol {
+  font-size: 12px; font-weight: 700; color: #90caf9;
+  margin: 0 0 6px 2px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.completioGrup .programesLlista { max-height: none; }
+
+.programesLlista_item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.programesLlista_info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.programesLlista_nom {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.programesLlista_blocs {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.programesLlista_accions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.programesLlista_boto {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.programesLlista_boto:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.programesLlista_boto-carregar {
+  background: rgba(31, 157, 70, 0.2);
+  border-color: #1f9d46;
+  color: #4cdd80;
+}
+.programesLlista_boto-carregar:hover {
+  background: rgba(31, 157, 70, 0.35);
+}
+
+.programesLlista_boto-eliminar {
+  background: rgba(201, 52, 52, 0.15);
+  border-color: rgba(201, 52, 52, 0.5);
+  color: #ffd7d7;
+}
+.programesLlista_boto-eliminar:hover {
+  background: rgba(201, 52, 52, 0.3);
+}
+
+/* Botó guardar a la toolbar */
+.botoAccio-guardar {
+  background: #1565c0;
+}
+.botoAccio-guardar:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+/* BarraSuperior: botons auth */
+.barraBoto {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.barraBoto:hover { background: rgba(255, 255, 255, 0.18); }
+
+.barraBoto-connectat {
+  background: rgba(29, 185, 84, 0.2);
+  border-color: #1db954;
+  color: #1db954;
+}
+.barraBoto-connectat:hover { background: rgba(29, 185, 84, 0.3); }
+
+.barraBoto-programes {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barraBoto-logout {
+  background: rgba(201, 52, 52, 0.15);
+  border-color: rgba(201, 52, 52, 0.4);
+  color: #ffd7d7;
+}
+.barraBoto-logout:hover { background: rgba(201, 52, 52, 0.28); }
+
+.barraBoto-login {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* BarraSuperior dreta: contenidor botons */
+.barraSuperior_dreta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Botó guardar — color ambre per diferenciar-lo */
+.botoAccio-guardar {
+  background: #a0650a;
+}
+.botoAccio-guardar:hover:not(:disabled) {
+  background: #bf7a10;
+}
+
+/* Botó recuperar — igual que visualitzar però verd suau */
+.botoAccio-recuperar {
+  background: #1a5c38;
+}
+.botoAccio-recuperar:hover:not(:disabled) {
+  background: #236b42;
+}
+
+/* Botó "Enviar al robot" amb text */
+.botoAccio-amb-text {
+  width: auto;
+  padding: 0 16px;
+  gap: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.textoBoto {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Menú desplegable d'usuari a la barra superior */
+.usuariMenu {
+  position: relative;
+}
+
+.usuariMenu_boto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.usuariMenu_fletxa {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.usuariMenu_dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #0f0f0f;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  min-width: 210px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.usuariMenu_capcalera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.usuariMenu_nom {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.usuariMenu_tancar {
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.usuariMenu_tancar:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.usuariMenu_accions {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.usuariMenu_accio {
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+  width: 100%;
+}
+.usuariMenu_accio:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.usuariMenu_accio-logout {
+  color: #ffa0a0;
+}
+.usuariMenu_accio-logout:hover {
+  background: rgba(201, 52, 52, 0.18);
+  color: #ffd7d7;
+}
+
+.usuariMenu_info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.usuariMenu_centre {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usuariMenu_curs {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Modal auth — variants */
+.modalAuth_fila2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modalAuth_fila2 > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modalAuth_ok {
+  color: #4cdd80;
+  font-size: 13px;
+  background: rgba(29, 185, 84, 0.15);
+  border: 1px solid rgba(29, 185, 84, 0.4);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-top: 4px;
+}
+
+.modalPerfil_nomUsuari {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: -12px 0 4px;
+}
+
+/* Selector de centre */
+.selectorCentre {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selectorCentre_nou {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+/* select reutilitza .modalAuth_input */
+.modalAuth_input option {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+/* Controls de càmera + configuració sobre el simulador */
+.controlsCamera {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 6;
+}
+
+.controlCamera {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: none;
+  background: rgba(0, 10, 30, 0.72);
+  color: #90caf9;
+  font-size: 15px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, color 0.18s, transform 0.12s;
+}
+.controlCamera:hover {
+  background: rgba(41, 182, 246, 0.38);
+  color: #fff;
+}
+
+/* Ghost de drag tàctil */
+.dragGhost {
+  position: fixed;
+  width: 72px;
+  height: auto;
+  transform: translate(-50%, -50%) scale(1.1);
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0.82;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+
+/* Botó velocitats simulador */
+.simulador-boto-vel {
+  background: rgba(20, 10, 0, 0.75);
+  color: #ffd600;
+  border-color: #ffd600;
+  box-shadow: 0 2px 8px rgba(255,214,0,0.2);
+  backdrop-filter: blur(6px);
+  padding: 8px 14px;
+}
+.simulador-boto-vel:hover:not(:disabled) {
+  background: rgba(255, 214, 0, 0.18);
+}
+
+/* Velocitats modal */
+.modalVelocitats_info { font-size: 12px; color: #90caf9; margin: -4px 0 10px 0; padding: 0 16px; }
+.modalVelocitats_info strong { color: #ffffff; }
+.velCamp { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.velCamp_fila { display: flex; align-items: center; gap: 10px; }
+.velCamp_slider { flex: 1; accent-color: #29b6f6; }
+.velCamp_valor { font-size: 12px; font-family: monospace; color: #90caf9; min-width: 52px; text-align: right; }
+
+/* Reptes */
+.botoAccio-reptes { background: #7b1fa2; }
+.botoAccio-reptes:hover:not(:disabled) { background: #9c27b0; }
+
+.reptes_llista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.reptes_item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 12px 14px;
+}
+.reptes_info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.reptes_nom { font-size: 15px; font-weight: 700; color: #fff; }
+.reptes_dif { font-size: 13px; color: #ffd600; letter-spacing: 2px; }
+.reptes_desc { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.4; }
+.reptes_accio { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.reptes_millorTemps {
+  font-size: 11px; font-weight: 600; color: #ffd600;
+  white-space: nowrap;
+}
+
+.repteConfig_nom {
+  font-size: 15px; font-weight: 700; color: #fff;
+  margin-bottom: 14px; text-align: center;
+}
+.repteConfig_slider-fila { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.repteConfig_slider-valor { font-size: 13px; font-family: monospace; color: #fff; min-width: 72px; }
+.repteConfig_select { margin-bottom: 4px; font-size: 14px; }
+
+/* Selectors d'opció (mode de joc, dificultat) al pas de configuració */
+.repteOpcions { display: flex; gap: 8px; margin-bottom: 6px; }
+.repteOpcio {
+  flex: 1; padding: 10px 6px; border-radius: 10px;
+  border: 1px solid rgba(144, 202, 249, 0.25);
+  background: rgba(144, 202, 249, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.repteOpcio:hover { background: rgba(144, 202, 249, 0.14); }
+.repteOpcio-actiu {
+  background: rgba(41, 182, 246, 0.28);
+  border-color: #29b6f6;
+  color: #fff;
+}
+
+.modalAuth_boto-secundari {
+  background: transparent;
+  border: 1px solid rgba(144, 202, 249, 0.35);
+  color: #90caf9;
+  margin-top: 4px;
+}
+.modalAuth_boto-secundari:hover { background: rgba(144, 202, 249, 0.1); }
+
+/* Badge repte actiu a la barra */
+.repteActiuBadge {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(123,31,162,0.35); border: 1px solid #9c27b0;
+  border-radius: 20px; padding: 4px 12px 4px 14px;
+}
+.repteActiuBadge_nom { font-size: 13px; font-weight: 600; color: #ce93d8; }
+.repteActiuBadge_temps {
+  font-family: monospace; font-size: 14px; font-weight: 700;
+  color: #fff; background: rgba(0,0,0,0.3); padding: 1px 7px; border-radius: 8px;
+}
+.repteActiuBadge_boies {
+  font-size: 13px; font-weight: 700; color: #fff;
+  background: rgba(76,175,80,0.4); padding: 1px 8px; border-radius: 8px;
+}
+.repteActiuBadge_sortir {
+  background: none; border: none; color: rgba(255,255,255,0.5);
+  font-size: 14px; cursor: pointer; padding: 0 2px; line-height: 1;
+}
+.repteActiuBadge_sortir:hover { color: #fff; }
+
+/* Modal repte completat */
+.modalRepteCompletat_nom { font-size: 15px; color: #ce93d8; margin-bottom: 16px; }
+.modalRepteCompletat_stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+}
+.modalRepteCompletat_stats > div {
+  background: #1a1a1a; border-radius: 10px; padding: 12px;
+  display: flex; flex-direction: column; gap: 4px; align-items: center;
+}
+.modalRepteCompletat_stats span { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.05em; }
+.modalRepteCompletat_stats strong { font-size: 22px; font-family: monospace; color: #ffd600; }
+
+.controlCamera-config {
+  margin-left: 4px;
+  color: #ffd600;
+}
+.controlCamera-config:hover {
+  background: rgba(255, 214, 0, 0.28);
+  color: #fff;
+  transform: rotate(45deg);
+}
+
+.configSeccio {
+  margin: 14px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+}
+.configSeccio:first-child {
+  margin-top: 0;
+}
+
+.configGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.configToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.configToggle:hover {
+  background: #222;
+}
+
+.configToggle-actiu {
+  border-color: #1db954;
+  color: #fff;
+  background: rgba(29, 185, 84, 0.14);
+}
+
+.configToggle_icona {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.configToggle_text {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.configToggle_estat {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.45);
+}
+.configToggle-actiu .configToggle_estat {
+  background: rgba(29, 185, 84, 0.3);
+  color: #4cdd80;
+}
+

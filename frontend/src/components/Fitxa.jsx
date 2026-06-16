@@ -9,6 +9,7 @@ function Fitxa({
   enComencarArrossegament,
   enCanviarValor,
   enClic,
+  enPointerDown,
 }) {
   const gestionarCanvi = (event) => {
     const text = event.target.value;
@@ -24,9 +25,10 @@ function Fitxa({
 
   return (
     <div
-      className={`fitxa ${arrossegable ? "fitxa--arrossegable" : ""}`}
+      className={`fitxa ${arrossegable ? "fitxa-arrossegable" : ""}`}
       draggable={arrossegable}
       onDragStart={arrossegable ? enComencarArrossegament : undefined}
+      onPointerDown={enPointerDown}
       onClick={enClic}
       title={nom}
     >
@@ -48,7 +50,7 @@ function Fitxa({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <div className="fitxaNumero fitxaNumero--fix">{valor}</div>
+          <div className="fitxaNumero fitxaNumero-fix">{valor}</div>
         ))}
 
       {mostrarNom && <div className="fitxaNom">{nom}</div>}
