@@ -1,18 +1,15 @@
 import { useState, useCallback } from "react";
 
-const BUIT = { lliures: [], reptes: {} };
-
-
 export function useProgrames(token) {
-  const [programes, setProgrames] = useState(BUIT);
+  const [programes, setProgrames] = useState([]);
 
   const capcaleres = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
 
   const carregarProgrames = useCallback(async () => {
-    if (!token) { setProgrames(BUIT); return; }
+    if (!token) { setProgrames([]); return; }
     const res  = await fetch("/.netlify/functions/programes", { headers: capcaleres });
     const data = await res.json();
-    setProgrames({ lliures: data.lliures || [], reptes: data.reptes || {} });
+    setProgrames(Array.isArray(data) ? data : []);
   }, [token]);
 
   // Guarda un programa lliure
@@ -28,11 +25,11 @@ export function useProgrames(token) {
   };
 
   // Guarda una partida sencera d'un repte (tots els programes usats)
-  const guardarPartidaRepte = async (repteId, programesPartida, data = Date.now()) => {
+  const guardarPartidaRepte = async (repteId, programesPartida, grup = Date.now()) => {
     const res = await fetch("/.netlify/functions/programes", {
       method: "POST",
       headers: capcaleres,
-      body: JSON.stringify({ tipus: "repte", repteId, data, programes: programesPartida }),
+      body: JSON.stringify({ tipus: "repte", repteId, grup, programes: programesPartida }),
     });
     const desada = await res.json();
     await carregarProgrames();
