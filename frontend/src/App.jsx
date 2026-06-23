@@ -458,24 +458,32 @@ const CLAU_LLIURES = '_lliures_';
 function ModalProgramesGuardats({ enTancar, programes, enCarregar, enEliminar, carregantLlista }) {
   const [seleccio, setSeleccio] = useState(null);
 
-  // Programes lliures i reptes
-  const lliures  = programes.lliures || [];
-  const reptes   = programes.reptes  || {};
-  const repteIds = Object.keys(reptes);
+  const lliures  = programes.filter(p => !p.repteId);
+  const ambRepte = programes.filter(p => p.repteId);
+  const repteIds = [...new Set(ambRepte.map(p => p.repteId))];
   const nomRepte = (id) => REPTES.find(r => r.id === id)?.nom || id;
 
   const opcions = repteIds.map(id => ({ valor: id, etiqueta: `🏆 ${nomRepte(id)}` }));
   if (lliures.length) opcions.push({ valor: CLAU_LLIURES, etiqueta: '📄 Programes sense repte' });
   const seleccioActiva = seleccio ?? opcions[0]?.valor ?? null;
 
-  const totalProgrames = lliures.length + repteIds.reduce(
-    (acc, id) => acc + reptes[id].reduce((a, p) => a + p.programes.length, 0), 0);
+  const totalProgrames = programes.length;
 
   const formatData = (g) => g
     ? new Date(Number(g)).toLocaleString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     : 'Sense data';
 
-  const partidesDeRepte = (id) => [...(reptes[id] || [])].sort((a, b) => b.data - a.data);
+  const partidesDeRepte = (id) => {
+    const grups = new Map();
+    ambRepte.filter(p => p.repteId === id).forEach(p => {
+      const g = p.grup ?? 0;
+      if (!grups.has(g)) grups.set(g, []);
+      grups.get(g).push(p);
+    });
+    return [...grups.entries()]
+      .sort((a, b) => b[0] - a[0])
+      .map(([grup, programes]) => ({ data: grup, programes }));
+  };
 
   const filaPrograma = (p) => (
     <li key={p._id} className="programesLlista_item">
@@ -1317,7 +1325,7 @@ export default function App() {
           enTancar={() => setModalGuardarObert(false)}
           enGuardar={handleConfirmarGuardar}
           programaActual={programa}
-          programesExistents={programes.lliures}
+          programesExistents={programes.filter(p => !p.repteId)}
         />
       )}
 
