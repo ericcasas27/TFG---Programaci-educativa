@@ -1,14 +1,4 @@
 const mongoose = require("mongoose");
-const programaSchema = require("./Programa");
-
-
-const partidaSchema = new mongoose.Schema(
-  {
-    data:      { type: Number, required: true },
-    programes: { type: [programaSchema], default: [] },
-  },
-  { _id: false }
-);
 
 const usuariSchema = new mongoose.Schema({
   nomUsuari:  { type: String, required: true, trim: true, minlength: 3 },
@@ -20,11 +10,6 @@ const usuariSchema = new mongoose.Schema({
   curs:       { type: String, required: true, trim: true },
   email:      { type: String, trim: true, default: "" },
   reptes:     { type: Map, of: Number, default: {} },
-  //programes lliures i programes de reptes
-  programes: {
-    lliures: { type: [programaSchema],   default: [] },
-    reptes:  { type: Map, of: [partidaSchema], default: {} },
-  },
   creatAt:    { type: Date, default: Date.now },
 });
 
