@@ -1,12 +1,14 @@
 const mongoose = require("mongoose");
 
-// Un programa és un nom i la seva col·lecció de blocs
 const programaSchema = new mongoose.Schema(
   {
-    nom:   { type: String, default: "Programa sense nom" },
-    blocs: { type: Array,  default: [] },
+    usuariId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuari", required: true, index: true },
+    nom:      { type: String, default: "Programa sense nom" },
+    blocs:    { type: Array,  default: [] },
+    repteId:  { type: String, default: null },
+    grup:     { type: Number, default: null },
   },
   { timestamps: true }
 );
 
-module.exports = programaSchema;
+module.exports = mongoose.models.Programa || mongoose.model("Programa", programaSchema);
