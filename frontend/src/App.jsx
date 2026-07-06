@@ -6,6 +6,7 @@ import SimuladorRobot from "./components/SimuladorRobot";
 import { useAuth } from "./hooks/useAuth";
 import { useProgrames } from "./hooks/useProgrames";
 import { useRepte } from "./hooks/useRepte";
+import { useEsp, CALIBRACIO_DEFECTE, aplicarCalibracio } from "./hooks/useEsp";
 import { REPTES, CELL } from "./reptes/reptes";
 
 import baixImg from "./assets/down.png";
@@ -126,6 +127,16 @@ const BT_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0";
 const BT_CHAR_UUID    = "12345678-1234-5678-1234-56789abcdef1";
 const BT_MTU          = 180;
 
+// Moviments que es poden calibrar (ordre que s'envia al robot → fitxa visible)
+const MOVIMENTS_CALIBRABLES = [
+  { cmd: "FORWARD", img: dretaImg,       nom: "Avançar"        },
+  { cmd: "BACK",    img: esquerraImg,    nom: "Retrocedir"     },
+  { cmd: "UP",      img: daltImg,        nom: "Pujar"          },
+  { cmd: "DOWN",    img: baixImg,        nom: "Baixar"         },
+  { cmd: "LEFT",    img: girEsquerraImg, nom: "Girar esquerra" },
+  { cmd: "RIGHT",   img: girDretaImg,    nom: "Girar dreta"    },
+];
+
 function SelectorCentre({ centreId, onChange }) {
   const [centres,    setCentres   ] = useState([]);
   const [nouNom,     setNouNom    ] = useState("");
@@ -189,8 +200,8 @@ function SelectorCentre({ centreId, onChange }) {
   );
 }
 
-function ModalAuth({ enTancar, registrar, login }) {
-  const [pestanya,    setPestanya   ] = useState("login");
+function ModalAuth({ enTancar, registrar, login, pestanyaInicial = "login" }) {
+  const [pestanya,    setPestanya   ] = useState(pestanyaInicial);
   const [centreId,    setCentreId   ] = useState("");
   const [nomUsuari,   setNomUsuari  ] = useState("");
   const [contrasenya, setContrasenya] = useState("");
@@ -873,6 +884,514 @@ function ModalRepteCompletat({ repte, temps, numProgrames, numBoies, numMonedes,
   );
 }
 
+// Selector d'ESP previ a la calibració: tria un robot ja registrat o crea'n un de nou
+// amb un nom únic. Així es reconeix el mateix robot des de qualsevol ordinador.
+function ModalSeleccionarEsp({ enTancar, enSeleccionar, token }) {
+  const [llista,      setLlista     ] = useState([]);
+  const [carregant,   setCarregant  ] = useState(true);
+  const [seleccionat, setSeleccionat] = useState("");
+  const [nouNom,      setNouNom     ] = useState("");
+  const [error,       setError      ] = useState("");
+
+  useEffect(() => {
+    fetch("/.netlify/functions/esp", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d)) setLlista(d); })
+      .catch(() => {})
+      .finally(() => setCarregant(false));
+  }, [token]);
+
+  const continuar = () => {
+    if (seleccionat === "_nou_") {
+      const nom = nouNom.trim();
+      if (!nom) { setError("Escriu un nom per al robot."); return; }
+      if (llista.some((e) => e.nom.toLowerCase() === nom.toLowerCase())) {
+        setError("Ja existeix un ESP amb aquest nom. Tria'l de la llista."); return;
+      }
+      enSeleccionar(nom);
+    } else if (seleccionat) {
+      enSeleccionar(seleccionat);
+    } else {
+      setError("Selecciona un ESP o crea'n un de nou.");
+    }
+  };
+
+  const meus   = llista.filter((e) => e.meu);
+  const altres = llista.filter((e) => !e.meu);
+
+  return (
+    <div className="modalAuth_fons" onClick={enTancar}>
+      <div className="modalAuth_caixa" onClick={(e) => e.stopPropagation()}>
+        <button className="modalAuth_tancar" onClick={enTancar}>×</button>
+        <h3 className="modalAuth_titol">Quin robot vols calibrar?</h3>
+        <div className="modalAuth_cos">
+          <p className="calib_info">
+            Tria el teu ESP de la llista si ja l'has fet servir abans, o crea'n un de nou
+            amb un nom identificatiu únic. Així podràs recuperar la seva calibració des de
+            qualsevol ordinador.
+          </p>
+          {carregant ? (
+            <p className="modalAuth_info">Carregant...</p>
+          ) : (
+            <>
+              <label className="modalAuth_label">ESP registrats</label>
+              <select
+                className="modalAuth_input"
+                value={seleccionat}
+                onChange={(e) => { setSeleccionat(e.target.value); setError(""); }}
+              >
+                <option value="">-- Selecciona un ESP --</option>
+                {meus.length > 0 && (
+                  <optgroup label="Els meus">
+                    {meus.map((e) => <option key={e._id} value={e.nom}>{e.nom}</option>)}
+                  </optgroup>
+                )}
+                {altres.length > 0 && (
+                  <optgroup label={meus.length > 0 ? "Altres ESP" : "ESP registrats"}>
+                    {altres.map((e) => <option key={e._id} value={e.nom}>{e.nom}</option>)}
+                  </optgroup>
+                )}
+                <option value="_nou_">➕ Nou ESP...</option>
+              </select>
+              {seleccionat === "_nou_" && (
+                <input
+                  className="modalAuth_input"
+                  placeholder="Nom del robot (ex: ROV-1)"
+                  value={nouNom}
+                  onChange={(e) => { setNouNom(e.target.value); setError(""); }}
+                  onKeyDown={(e) => e.key === "Enter" && continuar()}
+                  autoFocus
+                />
+              )}
+              {error && <p className="modalAuth_error">{error}</p>}
+              <button className="modalAuth_boto" onClick={continuar}>Continuar →</button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal de calibració de moviments d'un ESP32. Per a cada moviment lògic permet
+// indicar quina ordre real s'ha d'enviar al robot (arrossegant la fitxa correcta).
+function ModalCalibracio({ enTancar, espNom, calibracio, enDesar, enProvar, btConnectat }) {
+  const [cal,         setCal        ] = useState(() => ({ ...CALIBRACIO_DEFECTE, ...calibracio }));
+  const [desant,      setDesant     ] = useState(false);
+  const [arrossegant, setArrossegant] = useState(null);
+
+  const fitxaDe   = (cmd) => MOVIMENTS_CALIBRABLES.find((m) => m.cmd === cmd);
+  const assignar  = (rowCmd, nouCmd) => setCal((c) => ({ ...c, [rowCmd]: nouCmd }));
+  const resetFila = (rowCmd) => setCal((c) => ({ ...c, [rowCmd]: rowCmd }));
+
+  const desar = async () => {
+    setDesant(true);
+    try { await enDesar(cal); enTancar(); }
+    finally { setDesant(false); }
+  };
+
+  return (
+    <div className="modalAuth_fons" onClick={enTancar}>
+      <div className="modalAuth_caixa modalAuth_caixa-ampla" onClick={(e) => e.stopPropagation()}>
+        <button className="modalAuth_tancar" onClick={enTancar}>×</button>
+        <h3 className="modalAuth_titol">Calibració · {espNom}</h3>
+        <div className="modalAuth_cos">
+          <p className="calib_info">
+            Prova cada moviment amb el botó ▶. Si el robot en fa un altre, arrossega la
+            fitxa correcta a la seva dreta per indicar quina ordre s'ha d'enviar realment.
+          </p>
+
+          <ul className="calibLlista">
+            {MOVIMENTS_CALIBRABLES.map((m) => {
+              const actual   = cal[m.cmd] || m.cmd;
+              const correcte = actual === m.cmd;
+              const fitxaAct = fitxaDe(actual);
+              return (
+                <li key={m.cmd} className="calibFila">
+                  <div
+                    className="calibFila_origen"
+                    draggable
+                    onDragStart={(e) => { setArrossegant(m.cmd); e.dataTransfer.effectAllowed = "copy"; e.dataTransfer.setData("text/plain", m.cmd); }}
+                    onDragEnd={() => setArrossegant(null)}
+                    title={`Arrossega «${m.nom}» cap a un altre moviment`}
+                  >
+                    <img src={m.img} alt="" className="calibFitxa_img" draggable="false" />
+                    <span className="calibFila_nom">{m.nom}</span>
+                  </div>
+
+                  <span className="calibFila_fletxa">→</span>
+
+                  <div
+                    className={`calibFila_desti ${correcte ? "calibFila_desti-ok" : "calibFila_desti-remap"}${arrossegant ? " calibFila_desti-actiu" : ""}`}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const c = e.dataTransfer.getData("text/plain") || arrossegant;
+                      if (c) assignar(m.cmd, c);
+                      setArrossegant(null);
+                    }}
+                  >
+                    {correcte ? (
+                      <span className="calibFila_ok">✓ Correcte</span>
+                    ) : (
+                      <>
+                        <img src={fitxaAct.img} alt="" className="calibFitxa_img" draggable="false" />
+                        <span className="calibFila_nom">{fitxaAct.nom}</span>
+                      </>
+                    )}
+                  </div>
+
+                  <button className="calibFila_provar" onClick={() => enProvar(m.cmd, cal)} disabled={!btConnectat} title="Provar al robot">▶</button>
+                  {!correcte && (
+                    <button className="calibFila_reset" onClick={() => resetFila(m.cmd)} title="Restablir aquest moviment">↺</button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="calib_accions">
+            <button className="modalAuth_boto modalAuth_boto-secundari" onClick={() => setCal({ ...CALIBRACIO_DEFECTE })}>↺ Restablir tot</button>
+            <button className="modalAuth_boto" onClick={desar} disabled={desant}>{desant ? "..." : "💾 Guardar"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Primera visita: convida a registrar-se
+function ModalBenvinguda({ enRegistrar, enSaltar }) {
+  return (
+    <div className="modalAuth_fons" onClick={enSaltar}>
+      <div className="modalAuth_caixa" onClick={(e) => e.stopPropagation()}>
+        <button className="modalAuth_tancar" onClick={enSaltar}>×</button>
+        <h3 className="modalAuth_titol">Hola! Benvingut/da al TeleROV 🐠</h3>
+        <div className="modalAuth_cos">
+          <p className="tutorial_text">
+            Si et registres podràs guardar els teus programes i jugar als reptes. És molt
+            ràpid, només necessites:
+          </p>
+          <ul className="benvinguda_llista">
+            <li>🏫 La teva escola</li>
+            <li>😀 El teu nom</li>
+            <li>👤 Un nom d'usuari</li>
+            <li>🔒 Una contrasenya</li>
+          </ul>
+          <button className="modalAuth_boto" onClick={enRegistrar}>Registrar-me</button>
+          <button className="modalAuth_boto modalAuth_boto-secundari" onClick={enSaltar}>Ara no, gràcies</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Mini tutorial d'introducció a l'aplicació
+function ModalTutorial({ enTancar }) {
+  const [pas, setPas] = useState(0);
+
+  const blocsTutorial = [
+    { img: banderaImg,     nom: "Començar" },
+    { img: finalImg,       nom: "Acabar" },
+    { img: dretaImg,       nom: "Avançar" },
+    { img: esquerraImg,    nom: "Retrocedir" },
+    { img: daltImg,        nom: "Pujar" },
+    { img: baixImg,        nom: "Baixar" },
+    { img: girDretaImg,    nom: "Girar dreta" },
+    { img: girEsquerraImg, nom: "Girar esquerra" },
+  ];
+
+  const passos = [
+    (
+      <div key="0">
+        <h3 className="modalAuth_titol">Aprèn a programar jugant! 🎮</h3>
+        <p className="tutorial_text">
+          Aquí faràs programes ajuntant blocs, i un robot submarí els farà de veritat: es
+          mourà per l'aigua tal com tu li diguis. Tu manes! 🐙
+        </p>
+      </div>
+    ),
+    (
+      <div key="1">
+        <h3 className="modalAuth_titol">Els blocs 🧩</h3>
+        <p className="tutorial_text">
+          Cada bloc és una ordre. Els poses en ordre i el robot els fa un darrere l'altre:
+        </p>
+        <div className="ajuda_llegenda">
+          {blocsTutorial.map((b) => (
+            <div className="ajuda_llegenda_item" key={b.nom}>
+              <img src={b.img} alt="" /><span>{b.nom}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+    (
+      <div key="2">
+        <h3 className="modalAuth_titol">Els reptes 🏆</h3>
+        <p className="tutorial_text">També pots superar reptes programant. Per exemple:</p>
+        <ul className="tutorial_reptes">
+          <li>✏️ Dibuixar un quadrat sota l'aigua</li>
+          <li>🟢 Caçar boies</li>
+          <li>🪙 Recollir les monedes d'or d'un vaixell enfonsat</li>
+        </ul>
+        <p className="tutorial_broma">
+          Ah, i una última cosa... els peixos NO es poden atrapar. Ni ho intentis! 🐠😜
+        </p>
+      </div>
+    ),
+  ];
+
+  const ultim = pas === passos.length - 1;
+
+  return (
+    <div className="modalAuth_fons">
+      <div className="modalAuth_caixa modalAuth_caixa-ampla" onClick={(e) => e.stopPropagation()}>
+        <button className="modalAuth_tancar" onClick={enTancar}>×</button>
+        <div className="modalAuth_cos">
+          {passos[pas]}
+          <div className="tutorial_punts">
+            {passos.map((_, i) => (
+              <span key={i} className={`tutorial_punt${i === pas ? " tutorial_punt-actiu" : ""}`} />
+            ))}
+          </div>
+          <div className="tutorial_nav">
+            {pas > 0 && (
+              <button className="modalAuth_boto modalAuth_boto-secundari" onClick={() => setPas(pas - 1)}>← Enrere</button>
+            )}
+            {ultim
+              ? <button className="modalAuth_boto" onClick={enTancar}>A jugar! 🎮</button>
+              : <button className="modalAuth_boto" onClick={() => setPas(pas + 1)}>Següent →</button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Explicació ràpida en començar un repte
+function ModalRepteInfo({ enTancar }) {
+  return (
+    <div className="modalAuth_fons" onClick={enTancar}>
+      <div className="modalAuth_caixa" onClick={(e) => e.stopPropagation()}>
+        <button className="modalAuth_tancar" onClick={enTancar}>×</button>
+        <h3 className="modalAuth_titol">Abans de començar 🗺️</h3>
+        <div className="modalAuth_cos">
+          <p className="tutorial_text">
+            El mar està dividit en caselles, com un tauler. Cada bloc de moviment mou el
+            robot <strong>mitja casella</strong>.
+          </p>
+          <div className="ajuda_avis ajuda_avis-info">
+            👉 Per moure el robot <strong>una casella sencera</strong>, posa-li un
+            <strong> 2</strong> (2 segons). El número del bloc és el <strong>temps</strong> que
+            dura el moviment!
+          </div>
+          <button className="modalAuth_boto" onClick={enTancar}>Entesos! 👍</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Explicació de velocitats i quadrícula, compartida entre l'ajuda general i la dels reptes
+function AjudaVelocitats({ titol = "⚡ Velocitats i quadrícula" }) {
+  return (
+    <>
+      <h4 className="ajuda_titol">{titol}</h4>
+      <p className="ajuda_text">
+        El mar està dividit en <strong>caselles</strong>, com un tauler. Normalment el robot
+        avança <strong>mitja casella cada segon</strong>.
+      </p>
+      <div className="ajuda_avis ajuda_avis-info">
+        👉 Per avançar <strong>una casella sencera</strong>, el robot s'ha de moure
+        <strong> 2 segons</strong>. Per exemple: el bloc «avançar» amb un <strong>2</strong>,
+        o dos blocs «avançar» amb un <strong>1</strong>.
+      </div>
+      <ul className="ajuda_passos">
+        <li>El número del bloc són els <strong>segons</strong> que es mou el robot.</li>
+        <li>Per girar i quedar mirant a un costat (un quart de volta), posa un <strong>2</strong> al bloc de girar.</li>
+        <li>Vols que vagi més ràpid o més a poc a poc? Canvia-ho amb el botó <strong>⚡ Vel.</strong></li>
+      </ul>
+    </>
+  );
+}
+
+// Ajuda contextual del repte que s'està jugant
+function ContingutAjudaRepte({ repte }) {
+  if (!repte) return null;
+  const dif = "★".repeat(repte.dificultat) + "☆".repeat(3 - repte.dificultat);
+
+  const consells = {
+    recorregut: [
+      "Segueix les línies grogues amb el robot.",
+      "Toca totes les boletes del camí: quan en toques una, es torna verda 🟢.",
+      "Primer baixa el robot fins a les línies i després ves seguint-les fins al final.",
+    ],
+    boies: [
+      "Porta el robot fins a la boia i toca-la.",
+      "Quan en toques una, en surt una altra en un altre lloc.",
+      "Toca'n tantes com puguis abans que s'acabi el temps! ⏱",
+    ],
+    monedes: [
+      "Entra dins del vaixell enfonsat amb el robot.",
+      "Passa per sobre de les monedes 🪙 per agafar-les.",
+      "Agafa'n tantes com puguis, ràpid! Si has posat obstacles, vigila no xocar-hi.",
+    ],
+  };
+  const passos = consells[repte.tipus] || [];
+
+  return (
+    <div className="ajuda">
+      <p className="ajuda_intro">
+        <strong>{repte.nom}</strong> <span className="ajudaRepte_dif">{dif}</span><br />
+        {repte.descripcio}
+      </p>
+
+      <h4 className="ajuda_titol">🎯 Com superar-lo</h4>
+      <ul className="ajuda_passos">
+        {passos.map((c, i) => <li key={i}>{c}</li>)}
+      </ul>
+
+      <AjudaVelocitats />
+
+      <p className="ajuda_nota">
+        Quan acabis pots <strong>guardar</strong> els teus programes per tornar-los a fer
+        servir. Si t'equivoques, clica <strong>↺ Reset</strong> per començar de nou.
+      </p>
+    </div>
+  );
+}
+
+// Contingut de la finestra d'Ajuda: explica com fer servir l'aplicació amb dibuixos
+function ContingutAjuda() {
+  const blocsLlegenda = [
+    { img: banderaImg,     nom: "Iniciar (bandera verda)" },
+    { img: finalImg,       nom: "Finalitzar (bandera vermella)" },
+    { img: dretaImg,       nom: "Avançar" },
+    { img: esquerraImg,    nom: "Retrocedir" },
+    { img: daltImg,        nom: "Pujar" },
+    { img: baixImg,        nom: "Baixar" },
+    { img: girDretaImg,    nom: "Girar a la dreta" },
+    { img: girEsquerraImg, nom: "Girar a l'esquerra" },
+    { img: esperaImg,      nom: "Esperar" },
+    { img: repeteixImgIni, nom: "Repetir: inici" },
+    { img: repeteixImgFi,  nom: "Repetir: final" },
+  ];
+
+  const controlsCamera = [
+    { ic: "◀ ▶", txt: "Gira la càmera al voltant del robot" },
+    { ic: "👁",  txt: "Mira el robot de costat, des de dalt o des de baix" },
+    { ic: "🎥",  txt: "La càmera segueix el robot. Clica-la perquè es quedi quieta" },
+    { ic: "⌨",  txt: "Mou el robot amb el teclat (tecles W A S D i les fletxes)" },
+    { ic: "📍",  txt: "Posa el robot on vulguis" },
+    { ic: "🤖",  txt: "Mira com si fossis dins del robot" },
+    { ic: "⚙️",  txt: "Tria què es veu al simulador" },
+  ];
+
+  return (
+    <div className="ajuda">
+      <p className="ajuda_intro">
+        Amb el <strong>TeleROV</strong> mous un robot submarí! 🐠 Ajuntes blocs per fer un
+        programa, el proves al simulador i, si tens el robot de veritat, l'hi pots enviar.
+      </p>
+
+      <h4 className="ajuda_titol">🧩 1. Crea el teu programa</h4>
+      <svg className="ajuda_dibuix" viewBox="0 0 360 152" xmlns="http://www.w3.org/2000/svg"
+           role="img" aria-label="Arrossega els blocs cap a l'espai de programació">
+        <rect x="12" y="20" width="96" height="116" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.18)" />
+        <text x="60" y="38" textAnchor="middle" fill="#90caf9" fontSize="11" fontWeight="700">Blocs</text>
+        <rect x="26" y="48" width="32" height="32" rx="7" fill="#43a047" />
+        <rect x="62" y="48" width="32" height="32" rx="7" fill="#1e88e5" />
+        <rect x="26" y="88" width="32" height="32" rx="7" fill="#fb8c00" />
+        <rect x="62" y="88" width="32" height="32" rx="7" fill="#8e24aa" />
+        <path d="M120 78 H160" stroke="#4fc3f7" strokeWidth="3" fill="none" strokeDasharray="6 5" />
+        <path d="M156 70 L172 78 L156 86 Z" fill="#4fc3f7" />
+        <rect x="190" y="20" width="158" height="116" rx="10" fill="rgba(41,182,246,0.06)" stroke="rgba(41,182,246,0.3)" />
+        <text x="269" y="38" textAnchor="middle" fill="#90caf9" fontSize="11" fontWeight="700">Programa</text>
+        <rect x="206" y="46" width="126" height="20" rx="5" fill="#2e7d32" />
+        <text x="269" y="60" textAnchor="middle" fill="#fff" fontSize="10">🏁 iniciar</text>
+        <rect x="206" y="70" width="126" height="20" rx="5" fill="#1565c0" />
+        <text x="269" y="84" textAnchor="middle" fill="#fff" fontSize="10">avançar · 2</text>
+        <rect x="206" y="94" width="126" height="20" rx="5" fill="#1565c0" />
+        <text x="269" y="108" textAnchor="middle" fill="#fff" fontSize="10">girar dreta</text>
+        <rect x="206" y="118" width="126" height="16" rx="5" fill="#c62828" />
+        <text x="269" y="130" textAnchor="middle" fill="#fff" fontSize="9">finalitzar</text>
+      </svg>
+      <ol className="ajuda_passos">
+        <li>Agafa un bloc i <strong>arrossega'l</strong> cap a l'espai del programa. També pots <strong>clicar-lo</strong>.</li>
+        <li>Comença sempre amb la <strong>bandera verda</strong> 🟢 i acaba amb la <strong>vermella</strong> 🔴.</li>
+        <li>El <strong>número</strong> del bloc diu quants segons dura el moviment.</li>
+        <li>Per treure un bloc, clica la <strong>×</strong>. Per esborrar-ho tot, fes servir la paperera 🗑.</li>
+      </ol>
+
+      <div className="ajuda_llegenda">
+        {blocsLlegenda.map((b) => (
+          <div className="ajuda_llegenda_item" key={b.nom}>
+            <img src={b.img} alt="" />
+            <span>{b.nom}</span>
+          </div>
+        ))}
+      </div>
+
+      <h4 className="ajuda_titol">▶ 2. Prova-ho al simulador</h4>
+      <p className="ajuda_text">
+        Clica <strong>Simular</strong> (o la bandera verda) i veuràs el robot moure's a la
+        pantalla. Així saps si el teu programa funciona. Si no tens cap robot connectat, el
+        botó gros posa <strong>Simular</strong>.
+      </p>
+      <ul className="ajuda_passos">
+        <li><strong>▶ Simular</strong> — fa anar el robot.</li>
+        <li><strong>⏹ Stop</strong> — atura el robot.</li>
+        <li><strong>↺ Reset</strong> — torna el robot al principi.</li>
+        <li><strong>⚡ Vel.</strong> — canvia la velocitat del robot.</li>
+      </ul>
+
+      <h5 className="ajuda_subtitol">Moure la càmera</h5>
+      <div className="ajuda_llegenda">
+        {controlsCamera.map((c) => (
+          <div className="ajuda_llegenda_item ajuda_llegenda_item-ample" key={c.txt}>
+            <span className="ajuda_icona">{c.ic}</span>
+            <span>{c.txt}</span>
+          </div>
+        ))}
+      </div>
+      <p className="ajuda_nota">També pots moure la càmera <strong>arrossegant</strong> amb el ratolí, i amb la <strong>rodeta</strong> l'apropes o l'allunyes.</p>
+
+      <AjudaVelocitats titol="⚡ 3. Velocitats i quadrícula" />
+
+      <h4 className="ajuda_titol">🤖 4. Connecta el robot real</h4>
+      <div className="ajuda_avis">
+        ⚠️ Per moure el robot de <strong>veritat</strong> l'has de tenir encès i a punt (amb la
+        peça <strong>ESP32</strong>). Si no en tens, no passa res: pots fer servir el simulador igualment!
+      </div>
+      <svg className="ajuda_dibuix" viewBox="0 0 360 124" xmlns="http://www.w3.org/2000/svg"
+           role="img" aria-label="L'aplicació es connecta per Bluetooth a l'ESP32, que controla el robot">
+        <rect x="14" y="40" width="66" height="40" rx="4" fill="#263238" stroke="#90caf9" strokeWidth="1.5" />
+        <rect x="8" y="80" width="78" height="6" rx="2" fill="#90caf9" />
+        <text x="47" y="102" textAnchor="middle" fill="#b0bec5" fontSize="10">App TeleROV</text>
+        <text x="120" y="56" textAnchor="middle" fontSize="20">📡</text>
+        <text x="120" y="100" textAnchor="middle" fill="#4fc3f7" fontSize="9" fontWeight="700">Bluetooth</text>
+        <rect x="150" y="44" width="62" height="36" rx="4" fill="#1b5e20" stroke="#66bb6a" strokeWidth="1.5" />
+        <text x="181" y="66" textAnchor="middle" fill="#fff" fontSize="12" fontWeight="700">ESP32</text>
+        <text x="181" y="100" textAnchor="middle" fill="#b0bec5" fontSize="10">Controlador</text>
+        <path d="M220 62 H252" stroke="#4fc3f7" strokeWidth="3" fill="none" strokeDasharray="6 5" />
+        <path d="M248 54 L262 62 L248 70 Z" fill="#4fc3f7" />
+        <rect x="270" y="44" width="76" height="40" rx="12" fill="#ffd600" />
+        <circle cx="292" cy="60" r="6" fill="#fff" /><circle cx="293" cy="61" r="3" fill="#111" />
+        <circle cx="316" cy="60" r="6" fill="#fff" /><circle cx="317" cy="61" r="3" fill="#111" />
+        <text x="308" y="102" textAnchor="middle" fill="#b0bec5" fontSize="10">Robot (ROV)</text>
+      </svg>
+      <ol className="ajuda_passos">
+        <li>Encén el robot.</li>
+        <li>A dalt a la dreta, clica el botó <strong>📡 Bluetooth</strong>.</li>
+        <li>Tria <strong>TeleROV</strong> a la llista que apareix.</li>
+        <li>Quan vegis <strong>🔵 Connectat</strong>, clica <strong>Enviar al ROV</strong> i el robot farà el teu programa! 🎉</li>
+      </ol>
+      <p className="ajuda_nota">El Bluetooth funciona amb <strong>Chrome</strong> o <strong>Edge</strong> a l'ordinador o a l'Android. Als iPhone i iPad no va.</p>
+    </div>
+  );
+}
+
 // main
 export default function App() {
   const { usuari, carregant: carregantAuth, registrar, login, actualitzarPerfil, logout } = useAuth();
@@ -885,8 +1404,15 @@ export default function App() {
   } = useRepte(usuari?.token ?? null);
   const { programes, carregarProgrames, guardarPrograma, guardarPartidaRepte, actualitzarPrograma, eliminarPrograma }
     = useProgrames(usuari?.token);
+  const { calibracio, espNom, seleccionarEsp, desarCalibracio, reiniciarEsp } = useEsp(usuari?.token);
 
   const [ajudaOberta,    setAjudaOberta   ] = useState(false);
+  const [ajudaRepteOberta, setAjudaRepteOberta] = useState(false);
+  const [modalBenvingudaObert, setModalBenvingudaObert] = useState(false);
+  const [tutorialObert,        setTutorialObert       ] = useState(false);
+  const [modalRepteInfoObert,  setModalRepteInfoObert ] = useState(false);
+  const [mostrarTutorialDespres, setMostrarTutorialDespres] = useState(false);
+  const [authPestanya,         setAuthPestanya        ] = useState("login");
   const [sobreObert,     setSobreObert    ] = useState(false);
   const [seqOberta,      setSeqOberta     ] = useState(false);
   const [programa,       setPrograma      ] = useState([]);
@@ -910,6 +1436,8 @@ export default function App() {
   const [modalPerfilObert,   setModalPerfilObert  ] = useState(false);
   const [modalVelocitatObert,setModalVelocitatObert] = useState(false);
   const [modalReptesObert,   setModalReptesObert  ] = useState(false);
+  const [modalEspObert,        setModalEspObert       ] = useState(false);
+  const [modalCalibracioObert, setModalCalibracioObert] = useState(false);
 
   const VELOCITATS_DEFECTE = { horitzontal: 50, vertical: 50, gir: Math.PI / 4 };
   const [velocitats,          setVelocitats         ] = useState(VELOCITATS_DEFECTE);
@@ -950,6 +1478,7 @@ export default function App() {
       refBtDispositiu.current = dispositiu;
       dispositiu.addEventListener("gattserverdisconnected", () => {
         setBtConnectat(false); refBtCaracteristica.current = null; refBtDispositiu.current = null;
+        reiniciarEsp();
         mostrarToastBt("🔌 Robot desconnectat");
       });
       const servidor       = await dispositiu.gatt.connect();
@@ -965,6 +1494,7 @@ export default function App() {
   const desconnectarBluetooth = () => {
     if (refBtDispositiu.current?.gatt?.connected) refBtDispositiu.current.gatt.disconnect();
     setBtConnectat(false); refBtCaracteristica.current = null; refBtDispositiu.current = null;
+    reiniciarEsp();
     mostrarToastBt("🔌 Robot desconnectat");
   };
 
@@ -984,12 +1514,15 @@ export default function App() {
     executarSeguent();
   };
 
-  const enviarSequencia = async (sequencia) => {
+  // Envia una seqüència ja preparada (calibrada) al robot
+  const enviarBrut = async (sequencia) => {
     const car = refBtCaracteristica.current; if (!car) return;
     const bytes = new TextEncoder().encode(sequencia.join(""));
     for (let i = 0; i < bytes.length; i += BT_MTU)
       await car.writeValueWithoutResponse(bytes.slice(i, i + BT_MTU));
   };
+  // El que s'envia sempre al robot és la seqüència passada per la calibració de l'ESP
+  const enviarSequencia = (sequencia) => enviarBrut(aplicarCalibracio(sequencia, calibracio));
 
   const analisiBucles = useMemo(() => analitzarBucles(programa), [programa]);
 
@@ -1056,6 +1589,12 @@ export default function App() {
     else                     setSequenciaRobot([]);
   }, [sequenciaCompilada, analisiBucles.valid]);
 
+  // Seqüència que realment s'envia al robot: la del robot passada per la calibració
+  const sequenciaCalibrada = useMemo(
+    () => aplicarCalibracio(sequenciaRobot, calibracio),
+    [sequenciaRobot, calibracio]
+  );
+
   // Netejar el drop si no s'ha deixat anar res
   useEffect(() => {
     const enFinalitzar = () => { setDragInfo(null); setSlotActiu(null); };
@@ -1084,13 +1623,40 @@ export default function App() {
     } catch { mostrarToastBt("❌ Error enviant la seqüència"); }
   };
 
+  // Primera visita: suggerim registrar-se i, en tancar, mostrem el tutorial
+  useEffect(() => {
+    if (carregantAuth) return;
+    if (!localStorage.getItem("telerov_visitat")) {
+      localStorage.setItem("telerov_visitat", "1");
+      if (!usuari) setModalBenvingudaObert(true);
+    }
+  }, [carregantAuth, usuari]);
+
+  const obrirAuth = (pestanya = "login") => { setAuthPestanya(pestanya); setModalAuthObert(true); };
+
+  const handleTancarAuth = () => {
+    setModalAuthObert(false);
+    if (mostrarTutorialDespres) { setMostrarTutorialDespres(false); setTutorialObert(true); }
+  };
+
+  const handleBenvingudaRegistrar = () => {
+    setModalBenvingudaObert(false);
+    setMostrarTutorialDespres(true);
+    obrirAuth("registre");
+  };
+
+  const handleBenvingudaSaltar = () => {
+    setModalBenvingudaObert(false);
+    setTutorialObert(true);
+  };
+
   // guardar programa
   const handleGuardarPrograma = () => {
     if (programa.length === 0) { mostrarToastBt("⚠️ El programa és buit"); return; }
     const llest = programaLlest(programa);
     if (!llest.llest) { mostrarToastBt(`⚠️ ${llest.missatge}`); return; }
     if (!analisiBucles.valid) { mostrarToastBt(`⚠️ ${analisiBucles.missatge}`); return; }
-    if (!usuari) { setModalAuthObert(true); return; }
+    if (!usuari) { obrirAuth(); return; }
     setModalGuardarObert(true);
   };
 
@@ -1102,7 +1668,7 @@ export default function App() {
 
   // carregar programa
   const handleObrirProgrames = async () => {
-    if (!usuari) { setModalAuthObert(true); return; }
+    if (!usuari) { obrirAuth(); return; }
     setModalProgramesObert(true);
     setCarregantProgrames(true);
     await carregarProgrames();
@@ -1124,16 +1690,39 @@ export default function App() {
     await eliminarPrograma(id);
   };
 
+  // Prova un sol moviment al robot (1,5 s), ja calibrat amb la configuració del modal
+  const handleProvarMoviment = (cmd, cal) => {
+    enviarBrut(aplicarCalibracio([`{${cmd},1500}`], cal));
+  };
+
+  // Tria un ESP (existent o nou), carrega la seva calibració i obre el modal de calibració
+  const handleSeleccionarEsp = async (nom) => {
+    await seleccionarEsp(nom);
+    setModalEspObert(false);
+    setModalCalibracioObert(true);
+  };
+
+  // Desa la calibració de l'ESP actiu
+  const handleDesarCalibracio = async (cal) => {
+    try {
+      await desarCalibracio(espNom, cal);
+      mostrarToastBt(`💾 Calibració de "${espNom}" guardada!`);
+    } catch {
+      mostrarToastBt("❌ No s'ha pogut guardar la calibració");
+    }
+  };
+
   const handleIniciarRepte = (repte) => {
     if (repte.velocitats) {
       setVelocitatsPreviesRepte(velocitats);
       setVelocitats(repte.velocitats);
     }
-    iniciarRepte(repte); 
+    iniciarRepte(repte);
     programaAmbBanderes();
     const sig = repteSignal + 1;
     refRepteSignal.current = sig;
     setRepteSignal(sig);
+    setModalRepteInfoObert(true);
   };
 
   //restaura la velocitat x defecte al acabar el repte
@@ -1190,7 +1779,6 @@ export default function App() {
       setRepteSignal(sig);
     }
     refSimulador.current?.reset();
-    setSequenciaRobot([]);
     setRobotExecutant(false);
   };
 
@@ -1291,8 +1879,9 @@ export default function App() {
         enConnectarBluetooth={connectarBluetooth}
         enDesconnectarBluetooth={desconnectarBluetooth}
         btConnectat={btConnectat}
+        enObrirCalibracio={() => setModalEspObert(true)}
         usuari={usuari}
-        enLogin={() => setModalAuthObert(true)}
+        enLogin={() => obrirAuth()}
         enLogout={logout}
         enObrirProgrames={handleObrirProgrames}
         enEditarPerfil={() => setModalPerfilObert(true)}
@@ -1314,11 +1903,23 @@ export default function App() {
 
       {modalAuthObert && (
         <ModalAuth
-          enTancar={() => setModalAuthObert(false)}
+          enTancar={handleTancarAuth}
           registrar={registrar}
           login={login}
+          pestanyaInicial={authPestanya}
         />
       )}
+
+      {modalBenvingudaObert && (
+        <ModalBenvinguda
+          enRegistrar={handleBenvingudaRegistrar}
+          enSaltar={handleBenvingudaSaltar}
+        />
+      )}
+
+      {tutorialObert && <ModalTutorial enTancar={() => setTutorialObert(false)} />}
+
+      {modalRepteInfoObert && <ModalRepteInfo enTancar={() => setModalRepteInfoObert(false)} />}
 
       {modalGuardarObert && (
         <ModalGuardar
@@ -1370,6 +1971,25 @@ export default function App() {
           enIniciar={handleIniciarRepte}
           usuari={usuari}
           millorsResultats={millorsResultats}
+        />
+      )}
+
+      {modalEspObert && (
+        <ModalSeleccionarEsp
+          enTancar={() => setModalEspObert(false)}
+          enSeleccionar={handleSeleccionarEsp}
+          token={usuari?.token}
+        />
+      )}
+
+      {modalCalibracioObert && (
+        <ModalCalibracio
+          enTancar={() => setModalCalibracioObert(false)}
+          espNom={espNom}
+          calibracio={calibracio}
+          enDesar={handleDesarCalibracio}
+          enProvar={handleProvarMoviment}
+          btConnectat={btConnectat}
         />
       )}
 
@@ -1442,7 +2062,6 @@ export default function App() {
               resetSignal={resetSignal}
               repteSignal={repteSignal}
               posicioInicial={posicioInicialRepte}
-              onReset={() => setSequenciaRobot([])}
               onCanviarEstat={setEstatSimulador}
               visibilitat={visibilitat}
               onObrirConfig={() => setModalConfigObert(true)}
@@ -1469,13 +2088,24 @@ export default function App() {
           <div className="capcaleraProgramacio">
             <h2>Espai de programació</h2>
             <div className="accionsPrograma">
+              {repteActiu && (
+                <button
+                  className="botoAccio botoAccio-ajudaRepte"
+                  onClick={() => setAjudaRepteOberta(true)}
+                  title={`Ajuda del repte: ${repteActiu.nom}`}
+                  type="button"
+                >
+                  <span className="iconaBoto">❓</span>
+                </button>
+              )}
               <button
-                className="botoAccio botoAccio-reptes"
+                className="botoAccio botoAccio-reptes botoAccio-amb-text"
                 onClick={() => setModalReptesObert(true)}
                 title="Reptes"
                 type="button"
               >
                 <span className="iconaBoto">🏆</span>
+                <span className="textoBoto">Reptes</span>
               </button>
               <button
                 className="botoAccio botoAccio-visualitzar"
@@ -1509,21 +2139,26 @@ export default function App() {
               )}
               <button
                 className="botoAccio botoAccio-iniciar botoAccio-amb-text"
-                onClick={iniciarPrograma}
-                title={robotExecutant ? "El robot està executant una seqüència" : "Enviar al robot"}
+                onClick={btConnectat ? iniciarPrograma : gestionarSimular}
+                title={btConnectat
+                  ? (robotExecutant ? "El robot està executant una seqüència" : "Enviar al robot")
+                  : "Simular el programa al simulador"}
                 type="button"
-                disabled={robotExecutant}
+                disabled={btConnectat ? robotExecutant : (executant || !llest || !analisiBucles.valid)}
               >
-                <span className="iconaBoto">{robotExecutant ? "⏳" : "▶"}</span>
-                <span className="textoBoto">{robotExecutant ? "Executant..." : "Enviar al ROV"}</span>
+                <span className="iconaBoto">{btConnectat && robotExecutant ? "⏳" : "▶"}</span>
+                <span className="textoBoto">
+                  {btConnectat ? (robotExecutant ? "Executant..." : "Enviar al ROV") : "Simular"}
+                </span>
               </button>
               <button
-                className="botoAccio botoAccio-esborrar"
+                className="botoAccio botoAccio-esborrar botoAccio-amb-text"
                 onClick={esborrarPrograma}
                 title="Esborrar programa"
                 type="button"
               >
                 <span className="iconaBoto">🗑</span>
+                <span className="textoBoto">Esborrar programa</span>
               </button>
             </div>
           </div>
@@ -1605,6 +2240,12 @@ export default function App() {
               <pre className="modalSeq_pre">{sequenciaRobot.join("\n")}</pre>
             </div>
           )}
+          {sequenciaRobot.length > 0 && (
+            <div className="modalSeq_columna">
+              <h3 className="modalSeq_titol">Seqüència calibrada</h3>
+              <pre className="modalSeq_pre">{sequenciaCalibrada.join("\n")}</pre>
+            </div>
+          )}
           {sequenciaRobot.length === 0 && (
             <div className="modalSeq_columna modalSeq_columna-buit">
               <p>Envia el programa al robot (▶) per veure la seqüència robot.</p>
@@ -1614,7 +2255,14 @@ export default function App() {
       </Finestra>
 
       <Finestra titol="Ajuda / Instruccions d'ús" oberta={ajudaOberta} enTancar={() => setAjudaOberta(false)}>
-        <p>Explicar instruccions.</p>
+        <ContingutAjuda />
+      </Finestra>
+      <Finestra
+        titol={repteActiu ? `Ajuda · ${repteActiu.nom}` : "Ajuda del repte"}
+        oberta={ajudaRepteOberta}
+        enTancar={() => setAjudaRepteOberta(false)}
+      >
+        <ContingutAjudaRepte repte={repteActiu} />
       </Finestra>
       <Finestra titol="Sobre el projecte" oberta={sobreObert} enTancar={() => setSobreObert(false)}>
         <p>Explicar projecte i penjar pfg.</p>

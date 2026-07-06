@@ -79,6 +79,9 @@ button, input { font: inherit; }
 
 .barraSuperior_boto:hover { background: rgba(255, 255, 255, 0.18); }
 
+.barraSuperior_boto:disabled { opacity: 0.35; cursor: not-allowed; }
+.barraSuperior_boto:disabled:hover { background: rgba(255, 255, 255, 0.1); }
+
 .barraSuperior_boto-bt-off {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.2);
@@ -215,6 +218,8 @@ button, input { font: inherit; }
 .botoAccio-iniciar:hover { background: #28b352; }
 
 .botoAccio-esborrar { background: #c93434; }
+.botoAccio-ajudaRepte { background: #0097a7; }
+.botoAccio-ajudaRepte:hover { background: #00acc1; }
 .botoAccio-esborrar:hover { background: #dd4343; }
 
 .avisPrograma {
@@ -457,6 +462,117 @@ button, input { font: inherit; }
 }
 
 .modalContingut { padding: 16px; overflow: auto; flex: 1; }
+
+/* Finestra d'Ajuda */
+.ajuda { font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.86); }
+.ajuda_text { margin: 0 0 12px; }
+.ajuda_intro {
+  background: rgba(41, 182, 246, 0.1);
+  border: 1px solid rgba(41, 182, 246, 0.3);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0 0 18px;
+}
+.ajuda_titol {
+  display: flex; align-items: center; gap: 8px;
+  margin: 24px 0 12px;
+  font-size: 15px;
+  color: #4fc3f7;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 6px;
+}
+.ajuda_subtitol { margin: 16px 0 8px; font-size: 13.5px; color: #90caf9; }
+.ajuda_dibuix {
+  width: 100%; height: auto;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.ajuda_passos { margin: 0 0 14px; padding-left: 20px; }
+.ajuda_passos li { margin-bottom: 8px; }
+.ajuda_llegenda {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+.ajuda_llegenda_item {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 12.5px;
+}
+.ajuda_llegenda_item-ample { grid-column: 1 / -1; }
+.ajuda_llegenda_item img { width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; }
+.ajuda_icona { font-size: 15px; width: 30px; text-align: center; flex-shrink: 0; }
+.ajuda_avis {
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.ajuda_avis strong { color: #ffca28; }
+.ajuda_nota { font-size: 12.5px; color: rgba(255, 255, 255, 0.6); margin: 0 0 14px; }
+.ajuda_avis-info { background: rgba(41, 182, 246, 0.12); border-color: rgba(41, 182, 246, 0.4); color: #d6ecff; }
+.ajuda_avis-info strong { color: #4fc3f7; }
+.ajudaRepte_dif { color: #ffd600; letter-spacing: 2px; }
+
+/* Benvinguda, tutorial i info de repte */
+.tutorial_text { font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.85); margin: 0 0 14px; }
+.benvinguda_llista { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.benvinguda_llista li { background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+.tutorial_reptes { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.tutorial_reptes li { background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+.tutorial_broma { font-size: 13.5px; font-style: italic; color: #90caf9; margin: 4px 0 14px; }
+.tutorial_punts { display: flex; justify-content: center; gap: 8px; margin: 16px 0; }
+.tutorial_punt { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, 0.25); transition: background 0.2s; }
+.tutorial_punt-actiu { background: #4fc3f7; }
+.tutorial_nav { display: flex; gap: 10px; }
+.tutorial_nav .modalAuth_boto { flex: 1; margin: 0; }
+
+/* Calibració de moviments */
+.calib_info { font-size: 13.5px; color: rgba(255, 255, 255, 0.7); margin: 0 0 12px; line-height: 1.5; }
+.calibLlista { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.calibFila {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px; padding: 8px 10px;
+}
+.calibFila_origen {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 132px;
+  cursor: grab; padding: 4px 6px; border-radius: 8px;
+  border: 1px dashed transparent;
+}
+.calibFila_origen:hover { border-color: rgba(144, 202, 249, 0.5); background: rgba(144, 202, 249, 0.08); }
+.calibFila_origen:active { cursor: grabbing; }
+.calibFitxa_img { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; }
+.calibFila_nom { font-size: 12.5px; color: #fff; }
+.calibFila_fletxa { color: #4fc3f7; font-size: 16px; flex-shrink: 0; }
+.calibFila_desti {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  min-height: 42px; padding: 4px 10px; border-radius: 8px;
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  transition: border-color 0.15s, background 0.15s;
+}
+.calibFila_desti-ok    { border-style: solid; border-color: rgba(76, 175, 80, 0.5);  background: rgba(76, 175, 80, 0.1);  }
+.calibFila_desti-remap { border-style: solid; border-color: rgba(255, 152, 0, 0.55); background: rgba(255, 152, 0, 0.1);  }
+.calibFila_desti-actiu { border-color: #4fc3f7 !important; background: rgba(79, 195, 247, 0.12); }
+.calibFila_ok { color: #66bb6a; font-weight: 700; font-size: 13px; }
+.calibFila_provar, .calibFila_reset {
+  width: 34px; height: 34px; flex-shrink: 0;
+  border: none; border-radius: 8px; cursor: pointer; font-size: 14px;
+  background: rgba(255, 255, 255, 0.1); color: #fff;
+}
+.calibFila_provar:hover:not(:disabled) { background: rgba(79, 195, 247, 0.4); }
+.calibFila_provar:disabled { opacity: 0.4; cursor: not-allowed; }
+.calibFila_reset:hover { background: rgba(255, 152, 0, 0.4); }
+.calib_accions { display: flex; gap: 10px; }
+.calib_accions .modalAuth_boto { margin: 0; flex: 1; }
 
 .modalTancar {
   background: transparent;
