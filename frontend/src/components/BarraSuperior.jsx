@@ -7,6 +7,7 @@ export default function BarraSuperior({
   enConnectarBluetooth,
   enDesconnectarBluetooth,
   btConnectat,
+  enObrirCalibracio,
   usuari,
   enLogin,
   enLogout,
@@ -72,6 +73,16 @@ export default function BarraSuperior({
             📡 Bluetooth
           </button>
         )}
+
+        <button
+          className="barraSuperior_boto"
+          onClick={enObrirCalibracio}
+          title={btConnectat ? "Calibració de moviments del robot" : "Connecta un robot per poder calibrar-lo"}
+          type="button"
+          disabled={!btConnectat}
+        >
+          🎚️ Calibració
+        </button>
 
         {/* Auth */}
         {usuari ? (

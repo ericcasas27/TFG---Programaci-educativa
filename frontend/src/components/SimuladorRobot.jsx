@@ -568,6 +568,9 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
   const refOnHudUpdate    = useRef(onHudUpdate);
   const refVista          = useRef({ ...VISTA_DEFECTE });
   const refRadi           = useRef(460); // distància de la càmera (zoom)
+  const [seguintRobot, setSeguintRobot] = useState(true);   // la càmera segueix el robot
+  const refSeguintRobot = useRef(true);
+  const refCentreCamera = useRef({ x: 0, y: 0, z: 0 });      // punt fix quan no el segueix
   const [iconaVertical, setIconaVertical] = useState("👁");
   const [vistaPip, setVistaPip] = useState(false);
   const refVistaPip       = useRef(false);
@@ -658,6 +661,19 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
     } else {
       refVista.current.elevacio = 0.286; setIconaVertical("👁");
     }
+  }, []);
+
+  // Activa/desactiva que la càmera segueixi el robot. En fixar-la, recorda la posició actual.
+  const alternarSeguiment = useCallback(() => {
+    setSeguintRobot((s) => {
+      const nou = !s;
+      refSeguintRobot.current = nou;
+      if (!nou) {
+        const sim = refMotor.current?.sim;
+        if (sim) refCentreCamera.current = { x: sim.x, y: sim.y, z: sim.z };
+      }
+      return nou;
+    });
   }, []);
 
   // canvis de visibilitat dels elements de l'escena
@@ -1040,17 +1056,21 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
       robot.rotation.y = sim.angleH;
       llumRobot.position.set(sim.x, sim.y + 80, sim.z + 60);
 
-      // Càmera orbital al voltant del robot 
+      // Càmera orbital. Orbita al voltant del robot o, si el seguiment està desactivat,
+      // d'un punt fix. Els botons de gir/zoom segueixen funcionant en tots dos casos.
       const v = refVista.current || VISTA_DEFECTE;
       const R = refRadi.current;
       const cosE = Math.cos(v.elevacio);
-      const objX = sim.x + Math.sin(v.azimut) * cosE * R;
-      const objY = sim.y + Math.sin(v.elevacio) * R;
-      const objZ = sim.z + Math.cos(v.azimut) * cosE * R;
+      const centre = refSeguintRobot.current
+        ? { x: sim.x, y: sim.y, z: sim.z }
+        : refCentreCamera.current;
+      const objX = centre.x + Math.sin(v.azimut) * cosE * R;
+      const objY = centre.y + Math.sin(v.elevacio) * R;
+      const objZ = centre.z + Math.cos(v.azimut) * cosE * R;
       camera.position.x += (objX - camera.position.x) * 0.06;
       camera.position.y += (objY - camera.position.y) * 0.06;
       camera.position.z += (objZ - camera.position.z) * 0.06;
-      camera.lookAt(sim.x, sim.y, sim.z);
+      camera.lookAt(centre.x, centre.y, centre.z);
 
       // Actualitzar HUD cada 3 frames
       if (++comptadorHud % 3 === 0) {
@@ -1506,6 +1526,14 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
         <button className="controlCamera" onClick={girarEsquerra} title="Girar la vista a l'esquerra" type="button">◀</button>
         <button className="controlCamera" onClick={alternarVertical} title="Vista normal / des de dalt / des de baix" type="button">{iconaVertical}</button>
         <button className="controlCamera" onClick={girarDreta} title="Girar la vista a la dreta" type="button">▶</button>
+        <button
+          className={`controlCamera${seguintRobot ? " controlCamera-actiu-verd" : ""}`}
+          onClick={alternarSeguiment}
+          title={seguintRobot
+            ? "La càmera segueix el robot · clica per fixar-la"
+            : "Càmera fixa · clica per tornar a seguir el robot"}
+          type="button"
+        >{seguintRobot ? "🎥" : "📌"}</button>
         <button
           className={`controlCamera${teclatActiu ? " controlCamera-actiu-verd" : ""}`}
           onClick={alternarTeclat}
