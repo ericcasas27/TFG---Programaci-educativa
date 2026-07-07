@@ -663,7 +663,7 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
     }
   }, []);
 
-  // Activa/desactiva que la càmera segueixi el robot. En fixar-la, recorda la posició actual.
+  // Activa/desactiva que la càmera segueixi el robot. 
   const alternarSeguiment = useCallback(() => {
     setSeguintRobot((s) => {
       const nou = !s;
@@ -1056,8 +1056,7 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
       robot.rotation.y = sim.angleH;
       llumRobot.position.set(sim.x, sim.y + 80, sim.z + 60);
 
-      // Càmera orbital. Orbita al voltant del robot o, si el seguiment està desactivat,
-      // d'un punt fix. Els botons de gir/zoom segueixen funcionant en tots dos casos.
+      // Càmera orbital. Orbita al voltant del robot o, si el seguiment està desactivat, d'un punt fix. 
       const v = refVista.current || VISTA_DEFECTE;
       const R = refRadi.current;
       const cosE = Math.cos(v.elevacio);

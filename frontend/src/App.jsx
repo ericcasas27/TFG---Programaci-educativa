@@ -127,7 +127,7 @@ const BT_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0";
 const BT_CHAR_UUID    = "12345678-1234-5678-1234-56789abcdef1";
 const BT_MTU          = 180;
 
-// Moviments que es poden calibrar (ordre que s'envia al robot → fitxa visible)
+// Moviments que es poden calibrar
 const MOVIMENTS_CALIBRABLES = [
   { cmd: "FORWARD", img: dretaImg,       nom: "Avançar"        },
   { cmd: "BACK",    img: esquerraImg,    nom: "Retrocedir"     },
@@ -884,8 +884,7 @@ function ModalRepteCompletat({ repte, temps, numProgrames, numBoies, numMonedes,
   );
 }
 
-// Selector d'ESP previ a la calibració: tria un robot ja registrat o crea'n un de nou
-// amb un nom únic. Així es reconeix el mateix robot des de qualsevol ordinador.
+// Selector d'ESP previ a la calibració
 function ModalSeleccionarEsp({ enTancar, enSeleccionar, token }) {
   const [llista,      setLlista     ] = useState([]);
   const [carregant,   setCarregant  ] = useState(true);
@@ -973,8 +972,7 @@ function ModalSeleccionarEsp({ enTancar, enSeleccionar, token }) {
   );
 }
 
-// Modal de calibració de moviments d'un ESP32. Per a cada moviment lògic permet
-// indicar quina ordre real s'ha d'enviar al robot (arrossegant la fitxa correcta).
+// Modal de calibració de moviments d'un ESP32
 function ModalCalibracio({ enTancar, espNom, calibracio, enDesar, enProvar, btConnectat }) {
   const [cal,         setCal        ] = useState(() => ({ ...CALIBRACIO_DEFECTE, ...calibracio }));
   const [desant,      setDesant     ] = useState(false);
@@ -1216,7 +1214,7 @@ function AjudaVelocitats({ titol = "⚡ Velocitats i quadrícula" }) {
   );
 }
 
-// Ajuda contextual del repte que s'està jugant
+// Ajuda del repte que s'està jugant
 function ContingutAjudaRepte({ repte }) {
   if (!repte) return null;
   const dif = "★".repeat(repte.dificultat) + "☆".repeat(3 - repte.dificultat);
@@ -1262,7 +1260,7 @@ function ContingutAjudaRepte({ repte }) {
   );
 }
 
-// Contingut de la finestra d'Ajuda: explica com fer servir l'aplicació amb dibuixos
+// Contingut de la finestra d'Ajuda
 function ContingutAjuda() {
   const blocsLlegenda = [
     { img: banderaImg,     nom: "Iniciar (bandera verda)" },
@@ -1514,7 +1512,6 @@ export default function App() {
     executarSeguent();
   };
 
-  // Envia una seqüència ja preparada (calibrada) al robot
   const enviarBrut = async (sequencia) => {
     const car = refBtCaracteristica.current; if (!car) return;
     const bytes = new TextEncoder().encode(sequencia.join(""));
@@ -1589,7 +1586,7 @@ export default function App() {
     else                     setSequenciaRobot([]);
   }, [sequenciaCompilada, analisiBucles.valid]);
 
-  // Seqüència que realment s'envia al robot: la del robot passada per la calibració
+  // Seqüència que s'envia al robot (la calibrada)
   const sequenciaCalibrada = useMemo(
     () => aplicarCalibracio(sequenciaRobot, calibracio),
     [sequenciaRobot, calibracio]
@@ -1690,7 +1687,7 @@ export default function App() {
     await eliminarPrograma(id);
   };
 
-  // Prova un sol moviment al robot (1,5 s), ja calibrat amb la configuració del modal
+  // Prova un sol moviment al robot per calibrar
   const handleProvarMoviment = (cmd, cal) => {
     enviarBrut(aplicarCalibracio([`{${cmd},1500}`], cal));
   };

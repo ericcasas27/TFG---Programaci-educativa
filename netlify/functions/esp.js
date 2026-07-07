@@ -8,15 +8,14 @@ const COMANDES = ["FORWARD", "BACK", "UP", "DOWN", "LEFT", "RIGHT"];
 exports.handler = async (event) => {
   await connectarDB();
 
-  // Token opcional: si l'usuari està identificat, podrem atribuir-li l'ESP
+  // si l'usuari està identificat, podrem atribuir-li l'ESP
   const auth   = verificarToken(obtenirTokenDeCapcalera(event.headers));
   const userId = auth?.id ?? null;
 
   if (event.httpMethod === "GET") {
     const nom = (event.queryStringParameters?.nom || "").trim();
 
-    // GET ?nom=XX → calibració d'aquest ESP. Si l'usuari està identificat, el marquem
-    // com a usuari que l'ha feta servir.
+    // GET amb nom : calibració d'aquest ESP. Si l'usuari està identificat, el marquem com a usuari que l'ha feta servir.
     if (nom) {
       const esp = await Esp.findOne({ nom });
       if (esp && userId) {
@@ -26,8 +25,7 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ nom, calibracio }) };
     }
 
-    // GET sense paràmetres → llista de tots els ESP, marcant quins són "meus"
-    // (creats o usats per l'usuari identificat).
+    // GET sense paràmetres : llista de tots els ESP, marcant quins són "meus"
     const esps = await Esp.find({}, "nom creador usuarisUsats").sort({ nom: 1 });
     const llista = esps.map((e) => ({
       _id: e._id,
@@ -40,7 +38,7 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify(llista) };
   }
 
-  // POST → crea o actualitza la calibració d'un ESP identificat pel seu nom
+  // POST : crea o actualitza la calibració d'un ESP identificat pel seu nom
   if (event.httpMethod === "POST") {
     const { nom, calibracio } = JSON.parse(event.body || "{}");
     if (!nom?.trim()) return { statusCode: 400, body: JSON.stringify({ error: "Falta el nom de l'ESP" }) };

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-// Calibració per defecte: cada ordre s'envia tal qual (identitat)
+// Calibració per defecte: cada ordre s'envia tal qual
 export const CALIBRACIO_DEFECTE = {
   FORWARD: "FORWARD", BACK: "BACK", UP: "UP", DOWN: "DOWN", LEFT: "LEFT", RIGHT: "RIGHT",
 };
@@ -21,7 +21,6 @@ export function useEsp(token) {
   const [espNom,     setEspNom]     = useState(null);
 
   // Selecciona un ESP pel seu nom i carrega (i activa) la seva calibració.
-  // Si encara no existeix, parteix de la calibració per defecte.
   const seleccionarEsp = useCallback(async (nom) => {
     setEspNom(nom);
     try {
