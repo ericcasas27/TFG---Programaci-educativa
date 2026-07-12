@@ -650,8 +650,13 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
   }, [boia]);
 
   //camera
-  const girarEsquerra = useCallback(() => { refVista.current.azimut -= Math.PI / 4; }, []);
-  const girarDreta    = useCallback(() => { refVista.current.azimut += Math.PI / 4; }, []);
+  // Amb la càmera fixada gira de 90° en 90° per mantenir la vista perpendicular
+  const girarEsquerra = useCallback(() => {
+    refVista.current.azimut -= refSeguintRobot.current ? Math.PI / 4 : Math.PI / 2;
+  }, []);
+  const girarDreta = useCallback(() => {
+    refVista.current.azimut += refSeguintRobot.current ? Math.PI / 4 : Math.PI / 2;
+  }, []);
   const alternarVertical = useCallback(() => {
     const e = refVista.current.elevacio;
     if (Math.abs(e - 0.286) < 0.5) {
@@ -663,17 +668,24 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
     }
   }, []);
 
-  // Activa/desactiva que la càmera segueixi el robot. 
+  // Activa/desactiva que la càmera segueixi el robot.
   const alternarSeguiment = useCallback(() => {
-    setSeguintRobot((s) => {
-      const nou = !s;
-      refSeguintRobot.current = nou;
-      if (!nou) {
-        const sim = refMotor.current?.sim;
-        if (sim) refCentreCamera.current = { x: sim.x, y: sim.y, z: sim.z };
-      }
-      return nou;
-    });
+    const nou = !refSeguintRobot.current;
+    refSeguintRobot.current = nou;
+    setSeguintRobot(nou);
+    if (!nou) {
+      const lim = refLimits.current;
+      refCentreCamera.current = {
+        x: (lim.xMin + lim.xMax) / 2,
+        y: (lim.yMin + lim.yMax) / 2,
+        z: (lim.zMin + lim.zMax) / 2,
+      };
+      // Vista frontal: azimut al múltiple de 90° més proper i sense inclinació
+      const v = refVista.current;
+      v.azimut = Math.round(v.azimut / (Math.PI / 2)) * (Math.PI / 2);
+      v.elevacio = 0;
+      setIconaVertical("👁");
+    }
   }, []);
 
   // canvis de visibilitat dels elements de l'escena
@@ -1420,7 +1432,7 @@ const SimuladorRobot = forwardRef(function SimuladorRobot(
     refTimerBTTeclat.current = setInterval(() => {
       const keys = refTeclesPremsades.current;
       for (const [k, cmd] of Object.entries(mapKey)) {
-        if (keys.has(k)) { onEnviarComandaBT([`{${cmd},${DURACIO}}`]).catch(() => {}); break; }
+        if (keys.has(k)) { onEnviarComandaBT([`{${cmd},${DURACIO}}`, "{FINAL,0}"]).catch(() => {}); break; }
       }
     }, INTERVAL);
     return () => clearInterval(refTimerBTTeclat.current);

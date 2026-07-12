@@ -1,9 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Paleta "oceà": a joc amb el simulador submarí */
+  --fons: #0b1c2e;
+  --fons-fosc: #081627;
+  --panell: #10263d;
+  --superficie: #0c1e32;
+  --elevat: #0e2036;
+  --vora: rgba(126, 195, 255, 0.16);
+  --vora-forta: rgba(126, 195, 255, 0.3);
+  --accent: #29b6f6;
+  --accent-clar: #7fd4ff;
+  --text: #eaf4fc;
+  --text-suau: rgba(214, 235, 252, 0.6);
+
+  font-family: 'Nunito', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.92);
-  background-color: #1f1f1f;
+  color: var(--text);
+  background-color: var(--fons);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -19,8 +34,28 @@ html, body, #root {
   height: 100%;
 }
 
-body { background: #1f1f1f; color: white; }
+body {
+  background: linear-gradient(180deg, #0d2237 0%, var(--fons-fosc) 100%) fixed;
+  color: var(--text);
+}
 button, input { font: inherit; }
+
+::selection { background: rgba(41, 182, 246, 0.45); }
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(126, 195, 255, 0.22);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover { background-color: rgba(126, 195, 255, 0.38); }
+
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .aplicacio {
   height: 100vh;
@@ -36,9 +71,10 @@ button, input { font: inherit; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #111;
+  background: linear-gradient(180deg, #0a1a2c 0%, #0c2033 100%);
   color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--vora-forta);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
   z-index: 50;
 }
 
@@ -52,7 +88,7 @@ button, input { font: inherit; }
   width: 52px;
   height: 52px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(126, 195, 255, 0.12);
   overflow: hidden;
 }
 
@@ -63,24 +99,35 @@ button, input { font: inherit; }
   display: block;
 }
 
-.barraSuperior_titol { font-weight: 800; font-size: 20px; }
+.barraSuperior_titol {
+  font-weight: 900;
+  font-size: 21px;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, #ffffff 30%, var(--accent-clar));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
 .barraSuperior_nav { display: flex; gap: 8px; align-items: center; }
 
 .barraSuperior_boto {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(126, 195, 255, 0.1);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(126, 195, 255, 0.28);
   padding: 7px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s, transform 0.12s;
 }
 
-.barraSuperior_boto:hover { background: rgba(255, 255, 255, 0.18); }
+.barraSuperior_boto:hover { background: rgba(126, 195, 255, 0.22); }
+.barraSuperior_boto:active:not(:disabled) { transform: scale(0.97); }
 
 .barraSuperior_boto:disabled { opacity: 0.35; cursor: not-allowed; }
-.barraSuperior_boto:disabled:hover { background: rgba(255, 255, 255, 0.1); }
+.barraSuperior_boto:disabled:hover { background: rgba(126, 195, 255, 0.1); }
 
 .barraSuperior_boto-bt-off {
   background: rgba(255, 255, 255, 0.08);
@@ -114,19 +161,27 @@ button, input { font: inherit; }
 }
 
 .panell {
-  background: #262626;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  background: var(--panell);
+  border: 1px solid var(--vora);
+  border-radius: 18px;
   padding: 16px;
   min-height: 0;
   overflow: hidden;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
 }
 
 .panell h2 {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0 0 12px;
+  color: var(--accent-clar);
+  letter-spacing: 0.01em;
 }
+
+/* Icones dels títols dels tres panells */
+.panellBlocs > h2::before { content: "🧩 "; }
+.simuladorCapcalera h2::before { content: "🌊 "; }
+.capcaleraProgramacio h2::before { content: "🚀 "; }
 
 .zonaSimulador {
   grid-area: simulador;
@@ -202,7 +257,12 @@ button, input { font: inherit; }
   place-items: center;
   cursor: pointer;
   color: white;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.12s ease, background 0.15s ease;
 }
+
+.botoAccio:hover:not(:disabled) { transform: translateY(-1px); }
+.botoAccio:active:not(:disabled) { transform: translateY(0); }
 
 .botoAccio:disabled {
   opacity: 0.35;
@@ -242,10 +302,10 @@ button, input { font: inherit; }
 .zonaProgramacio {
   flex: 1;
   min-height: 0;
-  border: 2px dashed rgba(255, 255, 255, 0.18);
-  border-radius: 12px;
+  border: 2px dashed rgba(126, 195, 255, 0.32);
+  border-radius: 14px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(41, 182, 246, 0.05);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.12) transparent;
@@ -263,8 +323,9 @@ button, input { font: inherit; }
 }
 
 .zonaProgramacioBuit {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-suau);
   font-size: 16px;
+  font-weight: 600;
   line-height: 1.6;
   text-align: center;
 }
@@ -374,7 +435,7 @@ button, input { font: inherit; }
   flex: 1;
   margin: 0;
   padding: 12px;
-  background: #111;
+  background: #081524;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   white-space: pre-wrap;
@@ -397,8 +458,17 @@ button, input { font: inherit; }
   user-select: none;
 }
 
-.fitxa-arrossegable { cursor: grab; touch-action: none; }
-.fitxa-arrossegable:active { cursor: grabbing; }
+.fitxa-arrossegable {
+  cursor: grab;
+  touch-action: none;
+  border-radius: 12px;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.fitxa-arrossegable:hover {
+  transform: translateY(-3px) scale(1.04);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+.fitxa-arrossegable:active { cursor: grabbing; transform: scale(1.02); }
 
 .fitxaImatge { width: 82px; height: auto; display: block; }
 
@@ -409,13 +479,14 @@ button, input { font: inherit; }
   transform: translateX(-50%);
   width: 46px;
   text-align: center;
-  border: 1px solid #999;
+  border: 1px solid rgba(0, 0, 0, 0.25);
   border-radius: 12px;
   background: white;
   color: #111;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 14px;
   padding: 3px 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 .fitxaNumero-fix {
@@ -427,16 +498,17 @@ button, input { font: inherit; }
 
 .fitxaNom {
   margin-top: 6px;
-  font-size: 11px;
+  font-size: 11.5px;
+  font-weight: 700;
   text-align: center;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(234, 244, 252, 0.85);
   line-height: 1.2;
 }
 
 .modalFons {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(4, 14, 26, 0.65);
   z-index: 9999;
 }
 
@@ -445,9 +517,9 @@ button, input { font: inherit; }
   top: 0; right: 0;
   height: 100vh;
   width: min(420px, 92vw);
-  background: #0f0f0f;
+  background: var(--elevat);
   color: #fff;
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 1px solid var(--vora-forta);
   box-shadow: -20px 0 80px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
@@ -589,9 +661,9 @@ button, input { font: inherit; }
   bottom: 28px;
   left: 50%;
   transform: translateX(-50%) translateY(12px);
-  background: rgba(15, 15, 25, 0.96);
+  background: rgba(8, 22, 39, 0.96);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--vora-forta);
   border-radius: 14px;
   padding: 12px 24px;
   font-size: 14px;
@@ -653,13 +725,13 @@ button, input { font: inherit; }
 }
 
 /* Modal Auth / Guardar / Programes
-   Segueix el mateix estil que App.css: fons #1f1f1f, panells #262626,
-   bordes rgba(255,255,255,0.1), border-radius 16px, font system-ui */
+   Segueix el mateix estil que la resta de l'app: paleta oceànica definida
+   a :root (--fons, --panell, --elevat...), border-radius 18px, font Nunito */
 
 .modalAuth_fons {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(4, 14, 26, 0.65);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -667,9 +739,9 @@ button, input { font: inherit; }
 }
 
 .modalAuth_caixa {
-  background: #0f0f0f;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 16px;
+  background: var(--elevat);
+  border: 1px solid var(--vora-forta);
+  border-radius: 18px;
   padding: 24px 20px 20px;
   width: min(380px, 92vw);
   position: relative;
@@ -723,7 +795,7 @@ button, input { font: inherit; }
 }
 .modalAuth_tab-actiu {
   color: #fff;
-  border-bottom-color: #fff;
+  border-bottom-color: var(--accent);
 }
 .modalAuth_tab:hover:not(.modalAuth_tab-actiu) {
   color: rgba(255, 255, 255, 0.75);
@@ -747,15 +819,15 @@ button, input { font: inherit; }
 
 .modalAuth_label {
   font-size: 12px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+  color: rgba(167, 216, 255, 0.72);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 8px;
 }
 
 .modalAuth_input {
-  background: #1a1a1a;
+  background: var(--superficie);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
   color: #fff;
@@ -766,7 +838,8 @@ button, input { font: inherit; }
   width: 100%;
 }
 .modalAuth_input:focus {
-  border-color: rgba(255, 255, 255, 0.45);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(41, 182, 246, 0.18);
 }
 
 .modalAuth_error {
@@ -788,19 +861,20 @@ button, input { font: inherit; }
 
 .modalAuth_boto {
   margin-top: 16px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #1287c9;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 10px;
+  border: 1px solid rgba(126, 195, 255, 0.35);
+  border-radius: 12px;
   padding: 11px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.12s;
 }
 .modalAuth_boto:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.18);
+  background: #1c9de4;
 }
+.modalAuth_boto:active:not(:disabled) { transform: scale(0.98); }
 .modalAuth_boto:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -849,7 +923,7 @@ button, input { font: inherit; }
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: #1a1a1a;
+  background: var(--superficie);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 10px 12px;
@@ -926,17 +1000,17 @@ button, input { font: inherit; }
 
 /* BarraSuperior: botons auth */
 .barraBoto {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(126, 195, 255, 0.1);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(126, 195, 255, 0.28);
   padding: 7px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: background 0.15s;
 }
-.barraBoto:hover { background: rgba(255, 255, 255, 0.18); }
+.barraBoto:hover { background: rgba(126, 195, 255, 0.22); }
 
 .barraBoto-connectat {
   background: rgba(29, 185, 84, 0.2);
@@ -1026,7 +1100,7 @@ button, input { font: inherit; }
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: #0f0f0f;
+  background: var(--elevat);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 12px;
   min-width: 210px;
@@ -1165,7 +1239,7 @@ button, input { font: inherit; }
 
 /* select reutilitza .modalAuth_input */
 .modalAuth_input option {
-  background: #1a1a1a;
+  background: var(--superficie);
   color: #fff;
 }
 
@@ -1240,7 +1314,7 @@ button, input { font: inherit; }
 .reptes_llista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .reptes_item {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1);
+  background: var(--superficie); border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px; padding: 12px 14px;
 }
 .reptes_info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
@@ -1284,7 +1358,7 @@ button, input { font: inherit; }
   color: #90caf9;
   margin-top: 4px;
 }
-.modalAuth_boto-secundari:hover { background: rgba(144, 202, 249, 0.1); }
+.modalAuth_boto-secundari:hover:not(:disabled) { background: rgba(144, 202, 249, 0.12); }
 
 /* Badge repte actiu a la barra */
 .repteActiuBadge {
@@ -1313,7 +1387,7 @@ button, input { font: inherit; }
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
 }
 .modalRepteCompletat_stats > div {
-  background: #1a1a1a; border-radius: 10px; padding: 12px;
+  background: var(--superficie); border-radius: 10px; padding: 12px;
   display: flex; flex-direction: column; gap: 4px; align-items: center;
 }
 .modalRepteCompletat_stats span { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -1351,7 +1425,7 @@ button, input { font: inherit; }
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #1a1a1a;
+  background: var(--superficie);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 10px 12px;

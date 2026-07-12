@@ -5,6 +5,7 @@
   border-radius: 12px;
   overflow: hidden;
   background: #0288d1;
+  box-shadow: inset 0 0 0 1px rgba(126, 195, 255, 0.25);
 }
 
 .simulador-contenidor-modal {
@@ -442,7 +443,7 @@
 /* Modal teclat — ajuda */
 .teclatAjuda {
   font-size: 13px; color: rgba(255,255,255,0.6);
-  background: #1a1a1a; border-radius: 8px; padding: 10px 12px;
+  background: #0c1e32; border-radius: 8px; padding: 10px 12px;
   margin-bottom: 4px; line-height: 1.6;
 }
 

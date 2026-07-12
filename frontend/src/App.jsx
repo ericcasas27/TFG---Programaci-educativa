@@ -116,7 +116,7 @@ function expandirPrograma(programa, metaPerIndex, inici = 0, fi = programa.lengt
 }
 
 function traduirASecuenciaRobot(sequencia) {
-  const mapa = { "pujar":"UP","baixar":"DOWN","avançar":"FORWARD","retrocedir":"BACK","gira-dreta":"RIGHT","gira-esquerra":"LEFT","espera":"QUIET","atura":"QUIET" };
+  const mapa = { "pujar":"UP","baixar":"DOWN","avançar":"FORWARD","retrocedir":"BACK","gira-dreta":"RIGHT","gira-esquerra":"LEFT","espera":"QUIET","atura":"QUIET","final":"FINAL" };
   return sequencia.map((bloc) => {
     const ordre = mapa[bloc.tipus]; if (!ordre) return null;
     return `{${ordre},${bloc.valor ? bloc.valor * 1000 : 0}}`;
@@ -1689,7 +1689,7 @@ export default function App() {
 
   // Prova un sol moviment al robot per calibrar
   const handleProvarMoviment = (cmd, cal) => {
-    enviarBrut(aplicarCalibracio([`{${cmd},1500}`], cal));
+    enviarBrut(aplicarCalibracio([`{${cmd},1500}`, "{FINAL,0}"], cal));
   };
 
   // Tria un ESP (existent o nou), carrega la seva calibració i obre el modal de calibració
@@ -1790,45 +1790,81 @@ export default function App() {
     e.dataTransfer.setData("text/plain", instanciaId);
   };
   const finalitzarArrossegament = () => { setDragInfo(null); setSlotActiu(null); setDragGhost(null); refTouchDrag.current = null; };
-  const permetreDeixar = (e, index) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = dragInfo?.origen === "programa" ? "move" : "copy";
-    setSlotActiu(index);
+
+  // Si un bloc normal cau fora dels marcadors (davant de la bandera verda o
+  // darrere de la vermella), es recol·loca just dins de la seqüència.
+  const ajustarIndexInsercio = (p, tipus, index) => {
+    let i = index;
+    if (tipus !== TIPUS_PRIMER && p[0]?.tipus === TIPUS_PRIMER) i = Math.max(i, 1);
+    if (!TIPUS_ULTIMS.has(tipus) && p.length > 0 && TIPUS_ULTIMS.has(p[p.length - 1].tipus)) i = Math.min(i, p.length - 1);
+    return i;
   };
+
+  const inserirDesDePaleta = (blocId, index) => {
+    const bloc = BLOCS_BASE.find((b) => b.id === blocId);
+    if (!bloc) return;
+    const p = [...programa];
+    p.splice(ajustarIndexInsercio(p, bloc.tipus, index), 0, crearBlocPrograma(bloc));
+    aplicarCanviPrograma(p);
+  };
+
+  const moureBlocPrograma = (instanciaId, index) => {
+    const io = programa.findIndex((b) => b.instanciaId === instanciaId);
+    if (io === -1) return;
+    const p = [...programa];
+    const [mogut] = p.splice(io, 1);
+    let id = index; if (io < index) id--;
+    p.splice(ajustarIndexInsercio(p, mogut.tipus, id), 0, mogut);
+    aplicarCanviPrograma(p);
+  };
+
   const deixarEnPosicio = (e, index) => {
     e.preventDefault(); if (!dragInfo) return;
-    if (dragInfo.origen === "paleta") {
-      const bloc = BLOCS_BASE.find((b) => b.id === dragInfo.blocId);
-      if (bloc) { const p = [...programa]; p.splice(index, 0, crearBlocPrograma(bloc)); aplicarCanviPrograma(p); }
-    }
-    if (dragInfo.origen === "programa") {
-      const io = programa.findIndex((b) => b.instanciaId === dragInfo.instanciaId);
-      if (io !== -1) {
-        const p = [...programa]; const [mogut] = p.splice(io, 1);
-        let id = index; if (io < index) id--;
-        p.splice(id, 0, mogut); aplicarCanviPrograma(p);
-      }
-    }
+    if (dragInfo.origen === "paleta")   inserirDesDePaleta(dragInfo.blocId, index);
+    if (dragInfo.origen === "programa") moureBlocPrograma(dragInfo.instanciaId, index);
     setDragInfo(null); setSlotActiu(null);
   };
 
-  // rouch / pointer drag (dispositius tactil)
+  // Troba el slot on ha de caure la peça. Retorna el slot més proper al punter; fora
+  // de la zona, només si el punter és a prop d'algun slot.
   const trobarSlotActiu = useCallback((cx, cy) => {
-    const slots = document.querySelectorAll("[data-slot]");
+    const MARGE_ZONA = 60;
+    const PAD_H = 50, PAD_V = 50;
+    const zona = document.querySelector(".zonaProgramacio");
+    let dinsZona = false;
+    if (zona) {
+      const zr = zona.getBoundingClientRect();
+      dinsZona = cx >= zr.left - MARGE_ZONA && cx <= zr.right + MARGE_ZONA &&
+                 cy >= zr.top  - MARGE_ZONA && cy <= zr.bottom + MARGE_ZONA;
+    }
     let millor = null, millorDist = Infinity;
-    const PAD_H = 50;
-    const PAD_V = 50;
-    slots.forEach((el) => {
+    document.querySelectorAll("[data-slot]").forEach((el) => {
       const r = el.getBoundingClientRect();
-      if (cx < r.left - PAD_H || cx > r.right + PAD_H) return;
-      const centreY = (r.top + r.bottom) / 2;
-      const toleranciaV = Math.max(PAD_V, (r.bottom - r.top) / 2 + PAD_V);
-      if (Math.abs(cy - centreY) > toleranciaV) return;
-      const dist = Math.hypot(cx - (r.left + r.right) / 2, cy - centreY);
+      // Distància del punter al rectangle del slot (0 si és a sobre)
+      const dx = Math.max(r.left - cx, 0, cx - r.right);
+      const dy = Math.max(r.top - cy, 0, cy - r.bottom);
+      if (!dinsZona && (dx > PAD_H || dy > PAD_V)) return;
+      const dist = Math.hypot(dx, dy);
       if (dist < millorDist) { millorDist = dist; millor = Number(el.dataset.slot); }
     });
     return millor;
   }, []);
+
+  // Drop amb ratolí: tota la zona de programació accepta el drop i la peça
+  // cau al slot més proper al punt on es deixa anar.
+  const arrossegarSobreZona = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = dragInfo?.origen === "programa" ? "move" : "copy";
+    setSlotActiu(trobarSlotActiu(e.clientX, e.clientY));
+  };
+  const sortirDeZona = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setSlotActiu(null);
+  };
+  const deixarEnZona = (e) => {
+    const slot = trobarSlotActiu(e.clientX, e.clientY);
+    if (slot == null) { e.preventDefault(); setDragInfo(null); setSlotActiu(null); return; }
+    deixarEnPosicio(e, slot);
+  };
 
   const iniciarTouchDrag = useCallback((e, info, imatge) => {
     if (e.pointerType === "mouse") return;
@@ -1849,16 +1885,8 @@ export default function App() {
     if (!drag) return;
     const slot = trobarSlotActiu(e.clientX, e.clientY);
     if (slot !== null) {
-      if (drag.origen === "paleta") {
-        const b = BLOCS_BASE.find((b) => b.id === drag.blocId);
-        if (b) { const p = [...programa]; p.splice(slot, 0, crearBlocPrograma(b)); aplicarCanviPrograma(p); }
-      } else if (drag.origen === "programa") {
-        const io = programa.findIndex((b) => b.instanciaId === drag.instanciaId);
-        if (io !== -1) {
-          const p = [...programa]; const [m] = p.splice(io, 1);
-          p.splice(io < slot ? slot - 1 : slot, 0, m); aplicarCanviPrograma(p);
-        }
-      }
+      if (drag.origen === "paleta")        inserirDesDePaleta(drag.blocId, slot);
+      else if (drag.origen === "programa") moureBlocPrograma(drag.instanciaId, slot);
     }
     finalitzarArrossegament();
   }, [trobarSlotActiu, programa]);
@@ -2166,13 +2194,16 @@ export default function App() {
             <p className="avisPrograma avisPrograma-avis">{missatgeLlest}</p>
           )}
 
-          <div className="zonaProgramacio">
+          <div
+            className="zonaProgramacio"
+            onDragOver={arrossegarSobreZona}
+            onDragLeave={sortirDeZona}
+            onDrop={deixarEnZona}
+          >
             {programa.length === 0 ? (
               <div
                 className={`zonaBuidaDrop${slotActiu === 0 ? " slotInsercio-actiu" : ""}`}
                 data-slot={0}
-                onDragOver={(e) => permetreDeixar(e, 0)}
-                onDrop={(e) => deixarEnPosicio(e, 0)}
               >
                 <p className="zonaProgramacioBuit">
                   🧩 Clica les peces o arrossega-les aquí per crear el programa
@@ -2183,8 +2214,6 @@ export default function App() {
                 <div
                   className={`slotInsercio${slotActiu === 0 ? " slotInsercio-actiu" : ""}`}
                   data-slot={0}
-                  onDragOver={(e) => permetreDeixar(e, 0)}
-                  onDrop={(e) => deixarEnPosicio(e, 0)}
                 />
                 {programa.flatMap((bloc, index) => [
                   <div
@@ -2214,8 +2243,6 @@ export default function App() {
                     key={`slot-${index + 1}`}
                     className={`slotInsercio${slotActiu === index + 1 ? " slotInsercio-actiu" : ""}`}
                     data-slot={index + 1}
-                    onDragOver={(e) => permetreDeixar(e, index + 1)}
-                    onDrop={(e) => deixarEnPosicio(e, index + 1)}
                   />,
                 ])}
               </div>
