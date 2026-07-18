@@ -3,7 +3,7 @@ import logo from "../assets/telerovnfons.png";
 
 export default function BarraSuperior({
   enObrirAjuda,
-  enObrirSobre,
+  enObrirInstallacio,
   enConnectarBluetooth,
   enDesconnectarBluetooth,
   btConnectat,
@@ -141,7 +141,7 @@ export default function BarraSuperior({
         )}
 
         <button className="barraSuperior_boto" onClick={enObrirAjuda}>❓ Ajuda</button>
-        <button className="barraSuperior_boto" onClick={enObrirSobre}>ℹ️ Sobre</button>
+        <button className="barraSuperior_boto" onClick={enObrirInstallacio}>🔧 Instal·lació</button>
       </div>
     </header>
   );
