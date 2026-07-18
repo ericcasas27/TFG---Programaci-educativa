@@ -1390,6 +1390,119 @@ function ContingutAjuda() {
   );
 }
 
+function TaulaMotors({ files }) {
+  return (
+    <table className="installacio_taula">
+      <thead>
+        <tr><th>ESP32</th><th>L298 (IN)</th><th>L298 (OUT)</th><th>Motor</th></tr>
+      </thead>
+      <tbody>
+        {files.map((c, i) => (
+          <tr key={i}><td>{c.esp32}</td><td>{c.in_}</td><td>{c.out}</td><td>{c.motor}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function ContingutInstallacio() {
+  const connexionsLaterals = [
+    { esp32: "25", in_: "IN1", out: "OUT1", motor: "ESQ1" },
+    { esp32: "26", in_: "IN2", out: "OUT2", motor: "ESQ2" },
+    { esp32: "14", in_: "IN3", out: "OUT3", motor: "DRE1" },
+    { esp32: "12", in_: "IN4", out: "OUT4", motor: "DRE2" },
+  ];
+  const connexionsVertical = [
+    { esp32: "19", in_: "IN1", out: "OUT1", motor: "VERT1" },
+    { esp32: "18", in_: "IN2", out: "OUT2", motor: "VERT2" },
+  ];
+
+  return (
+    <div className="ajuda">
+      <p className="ajuda_intro">
+        Per controlar el ROV real des de l'aplicació, cal carregar primer un
+        programa a l'ESP32 mitjançant l'Arduino IDE. Es fan servir{" "}
+        <strong>dos drivers L298</strong>: un per als dos motors laterals i
+        un altre per al motor vertical.
+      </p>
+
+      <h4 className="ajuda_titol">🔌 L298 #1 — motors laterals</h4>
+      <TaulaMotors files={connexionsLaterals} />
+
+      <h4 className="ajuda_titol">🔌 L298 #2 — motor vertical</h4>
+      <TaulaMotors files={connexionsVertical} />
+
+      <h4 className="ajuda_titol">🔋 Alimentació</h4>
+      <table className="installacio_taula">
+        <thead>
+          <tr><th>Component</th><th>Pin</th><th>Es connecta a</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ESP32</td><td>GND</td><td>Font (−)</td></tr>
+          <tr><td>L298 #1</td><td>+5V</td><td>Font (+)</td></tr>
+          <tr><td>L298 #1</td><td>GND</td><td>Font (−)</td></tr>
+          <tr><td>L298 #2</td><td>+5V</td><td>Font (+)</td></tr>
+          <tr><td>L298 #2</td><td>GND</td><td>Font (−)</td></tr>
+          <tr><td>ESP32</td><td>USB-C</td><td>PC (USB)</td></tr>
+        </tbody>
+      </table>
+      <p className="ajuda_nota">
+        L'ESP32 i els dos L298 han de compartir la mateixa massa (GND) de la
+        font d'alimentació, perquè els senyals digitals de l'ESP32 es
+        puguin interpretar correctament als L298. El connector USB-C de
+        l'ESP32 s'utilitza únicament per proporcionar-li energia.
+      </p>
+
+      <h4 className="ajuda_titol">🛠️ Instal·lació del programari</h4>
+      <ol className="ajuda_passos">
+        <li>
+          Descarregar i instal·lar{" "}
+          <a className="installacio_link" href="https://docs.arduino.cc/software/ide-v2/tutorials/getting-started/ide-v2-downloading-and-installing/" target="_blank" rel="noreferrer">
+            Arduino IDE
+          </a>.
+        </li>
+        <li>
+          Connectar l'ESP32 a l'ordinador amb un cable que permeti la
+          transmissió de dades (no tots els cables de càrrega ho permeten;
+          si no apareix cap port COM, prova amb un altre cable).
+        </li>
+        <li>
+          Instal·lar el paquet de plaques ESP32 a Arduino IDE: <em>Tools → Board → Boards Manager</em>.
+          Instal·lar l'esp32 d'Espressif Systems.
+        </li>
+        <li>Seleccionar la placa ESP: <em>Tools → Port</em> (el número de COM pot variar).</li>
+        <li>Seleccionar la placa a «Select Board».</li>
+        <li>
+          Copiar el codi de{" "}
+          <a className="installacio_link" href="https://github.com/ericcasas27/TFG---Programaci-educativa/blob/main/esp32/TeleROV/TeleROV.ino" target="_blank" rel="noreferrer">
+            GitHub
+          </a>{" "}
+          i enganxar-lo a l'editor de codi d'Arduino IDE.
+        </li>
+        <li>
+          Buscar <code>BLEDevice::init("TeleROV")</code>; cal afegir alguna
+          cosa al costat de TeleROV (dins les cometes), com ara
+          «TeleROV1313» per poder identificar l'ESP. L'aplicació ignora tots
+          els dispositius Bluetooth que no comencin per TeleROV.
+        </li>
+        <li>Clicar a la fletxa (→) per instal·lar-lo.</li>
+        <li>Esperar uns minuts a que el programa s'instal·li a l'ESP.</li>
+        <li>Mantenir connectat l'ESP32 a través d'USB.</li>
+        <li>Entrar a l'aplicació, tocar el botó «Bluetooth» i connectar-s'hi.</li>
+        <li>Ja pots enviar programes al teu ROV! 🎉</li>
+      </ol>
+
+      <p className="ajuda_nota">
+        Aquestes instruccions, amb captures de pantalla de cada pas, també
+        estan disponibles en{" "}
+        <a className="installacio_link" href="https://drive.google.com/file/d/1frMEzuMAP9p0x9WW3R6zG-i3LWPdE5or/view?usp=sharing" target="_blank" rel="noreferrer">
+          aquest document PDF
+        </a>.
+      </p>
+    </div>
+  );
+}
+
 // main
 export default function App() {
   const { usuari, carregant: carregantAuth, registrar, login, actualitzarPerfil, logout } = useAuth();
@@ -1411,7 +1524,7 @@ export default function App() {
   const [modalRepteInfoObert,  setModalRepteInfoObert ] = useState(false);
   const [mostrarTutorialDespres, setMostrarTutorialDespres] = useState(false);
   const [authPestanya,         setAuthPestanya        ] = useState("login");
-  const [sobreObert,     setSobreObert    ] = useState(false);
+  const [installacioObert, setInstallacioObert] = useState(false);
   const [seqOberta,      setSeqOberta     ] = useState(false);
   const [programa,       setPrograma      ] = useState([]);
   const [dragInfo,       setDragInfo      ] = useState(null);
@@ -1900,7 +2013,7 @@ export default function App() {
     >
       <BarraSuperior
         enObrirAjuda={() => setAjudaOberta(true)}
-        enObrirSobre={() => setSobreObert(true)}
+        enObrirInstallacio={() => setInstallacioObert(true)}
         enConnectarBluetooth={connectarBluetooth}
         enDesconnectarBluetooth={desconnectarBluetooth}
         btConnectat={btConnectat}
@@ -2288,8 +2401,8 @@ export default function App() {
       >
         <ContingutAjudaRepte repte={repteActiu} />
       </Finestra>
-      <Finestra titol="Sobre el projecte" oberta={sobreObert} enTancar={() => setSobreObert(false)}>
-        <p>Explicar projecte i penjar pfg.</p>
+      <Finestra titol="Instal·lació del ROV" oberta={installacioObert} enTancar={() => setInstallacioObert(false)}>
+        <ContingutInstallacio />
       </Finestra>
 
       {dragGhost && (
