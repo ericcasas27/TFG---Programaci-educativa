@@ -1,12 +1,12 @@
 # TeleROV
 
-Aplicació web per programar per blocs un robot submarí (ROV) teledirigit, pensada perquè infants i joves s'iniciïn en la programació i la robòtica de manera pràctica.
+Aplicació web per programar per blocs un robot submarí de baix cost (ROV), pensada perquè infants i joves s'iniciïn en la programació i la robòtica de manera pràctica.
 
 Projecte de Fi de Grau — Universitat de Girona
 
 ## Sobre el projecte
 
-TeleROV permet controlar i programar un petit robot submarí mitjançant blocs de programació visual, a l'estil de ScratchJr. Des del navegador, i sense instal·lar res, l'usuari arrossega blocs (moviments, girs, immersió...) per crear una seqüència, l'envia al robot per Bluetooth i en veu el resultat tant al robot real com en una representació 3D.
+TeleROV permet controlar i programar un petit robot submarí de baix cost mitjançant blocs de programació visual, a l'estil de ScratchJr. Des del navegador, i sense instal·lar res, l'usuari arrossega blocs (moviments, girs, immersió...) per crear una seqüència, l'envia al robot per Bluetooth i en veu el resultat tant al robot real com en una representació 3D.
 
 El projecte s'ha desenvolupat com a TFG del `Grau en Enginyeria Informàtica` a la Universitat de Girona, tutoritzat pel Dr. `Jordi Freixenet Bosch` i el Dr. `Xavier Cufí Solé`.
 
@@ -85,9 +85,9 @@ L'aplicació està desplegada a Netlify: `https://telerov.netlify.app/`
 
 ## Autoria
 
-Desenvolupat per **Èric Casas i González** com a Treball de Fi de Grau a la Universitat de Girona (curs `[2025–2026]`).
+Desenvolupat per **Èric Casas i González** com a Treball de Fi de Grau a la Universitat de Girona (curs `2025–2026`).
 
-Tutoritzat pel `Dr. Jordi Freixenet Bosch` i el `Dr. Xavier Cufí Solé`.
+Tutoritzat pel Dr. `Jordi Freixenet Bosch` i el Dr. `Xavier Cufí Solé`.
 
 ## Llicència
 
